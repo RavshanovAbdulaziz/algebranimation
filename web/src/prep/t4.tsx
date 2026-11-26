@@ -45,6 +45,7 @@ export const T4: PrepTopic = {
   recipes: [
     {
       title: "Vektor koordinatalari va yoyilmasi",
+      gens: ["ab", "ort"],
       rule: <>Vektorning koordinatalarini topish uchun <b>oxirining koordinatalaridan boshining koordinatalarini</b> ayiramiz. Koordinatalarni ortlar orqali ham yozish mumkin: <Tex>{"\\vec a=(2;\\ -5)=2\\vec i-5\\vec j"}</Tex>.</>,
       formula: "\\overrightarrow{AB}=(x_B-x_A;\\ \\ y_B-y_A;\\ \\ z_B-z_A)",
       steps: [
@@ -55,6 +56,7 @@ export const T4: PrepTopic = {
     },
     {
       title: "Qo'shish, ayirish, songa ko'paytirish",
+      gens: ["lin"],
       rule: <>Har bir koordinata alohida qo'shiladi; songa ko'paytirishda har bir koordinata shu songa ko'paytiriladi.</>,
       formula: "\\vec a+\\vec b=(x_1+x_2;\\ \\ y_1+y_2;\\ \\ z_1+z_2),\\qquad \\lambda\\cdot\\vec a=(\\lambda x;\\ \\ \\lambda y;\\ \\ \\lambda z)",
       steps: [
@@ -65,6 +67,7 @@ export const T4: PrepTopic = {
     },
     {
       title: "Uzunlik (modul)",
+      gens: ["len"],
       rule: <>Uzunlik Pifagor teoremasidan topiladi: koordinatalar kvadratlari yig'indisidan ildiz chiqariladi. Ikki nuqta orasidagi masofa — <Tex>{"\\overrightarrow{AB}"}</Tex> vektorning uzunligi.</>,
       formula: "|\\vec a|=\\sqrt{x^2+y^2+z^2}",
       steps: [
@@ -74,6 +77,7 @@ export const T4: PrepTopic = {
     },
     {
       title: "Skalyar ko'paytma va burchak",
+      gens: ["dot", "perp"],
       rule: <>Mos koordinatalarni ko'paytirib, qo'shamiz — natija <b>son</b>. Shu son orqali vektorlar orasidagi burchak <Tex>{"\\varphi"}</Tex> (fi) topiladi. Skalyar ko'paytma 0 ga teng bo'lsa, vektorlar <b>perpendikulyar</b>.</>,
       formula: "\\vec a\\cdot\\vec b=x_1x_2+y_1y_2+z_1z_2,\\qquad \\cos\\varphi=\\frac{\\vec a\\cdot\\vec b}{|\\vec a|\\cdot|\\vec b|}",
       steps: [
@@ -85,6 +89,7 @@ export const T4: PrepTopic = {
     },
     {
       title: "Kollinearlik sharti",
+      gens: ["col"],
       rule: <>Ikki vektor kollinear (bir chiziqda yoki parallel) bo'lishi uchun ularning koordinatalari <b>proporsional</b> bo'lishi kerak, ya'ni biri ikkinchisining biror songa ko'paytirilgani bo'ladi.</>,
       formula: "\\frac{x_1}{x_2}=\\frac{y_1}{y_2}=\\frac{z_1}{z_2}",
       steps: [
@@ -95,6 +100,7 @@ export const T4: PrepTopic = {
     },
     {
       title: "Kesmani λ nisbatda bo'lish",
+      gens: ["div"],
       rule: <>C nuqta AB kesmani <Tex>{"AC:CB=\\lambda"}</Tex> nisbatda bo'lsa, uning koordinatalari quyidagicha topiladi (y va z uchun ham xuddi shunday). <Tex>{"\\lambda=1"}</Tex> bo'lsa, C — kesmaning o'rtasi: <Tex>{"x_C=\\frac{x_A+x_B}{2}"}</Tex>.</>,
       formula: "x_C=\\frac{x_A+\\lambda\\cdot x_B}{1+\\lambda},\\qquad y_C=\\frac{y_A+\\lambda\\cdot y_B}{1+\\lambda}",
       steps: [

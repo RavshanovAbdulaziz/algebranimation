@@ -1,5 +1,7 @@
+import type { ReactNode } from "react";
 import { Tex } from "../components/Tex";
 import { det2, pick, ri, rnz, tmat, tn, tp, type PrepTopic } from "./core";
+import { inv2Anim, prodAnim } from "./anim";
 
 const Y = "#ffd166"; // satr
 const R = "#fc6255"; // ustun
@@ -18,6 +20,211 @@ const hlCol = (B: number[][], j: number) => `\\begin{pmatrix} ${B.map((r) => r.m
 
 const EA = [[1, 2, 0], [3, -1, 4]];
 const EB = [[2, 1], [0, 3], [-1, 2]];
+
+const GR = "#6b7280";
+const T = (A: number[][]) => A[0].map((_, j) => A.map((r) => r[j]));
+const minorOf = (m: number[][], i: number, j: number) => m.filter((_, a) => a !== i).map((r) => r.filter((_, b) => b !== j));
+const det3 = (m: number[][]) =>
+  m[0][0] * (m[1][1] * m[2][2] - m[1][2] * m[2][1]) - m[0][1] * (m[1][0] * m[2][2] - m[1][2] * m[2][0]) + m[0][2] * (m[1][0] * m[2][1] - m[1][1] * m[2][0]);
+const d2calc = (q: number[][]) => `${tp(q[0][0])}\\cdot${tp(q[1][1])} - ${tp(q[0][1])}\\cdot${tp(q[1][0])} = ${tn(det2(q))}`;
+const grayed = (m: number[][], i: number, j: number) =>
+  `\\begin{pmatrix} ${m.map((r, a) => r.map((x, b) => (a === i || b === j ? `\\color{${GR}}{${tn(x)}}` : tn(x))).join(" & ")).join(" \\\\ ")} \\end{pmatrix}`;
+/** 1/d ni daftardagidek: −1/5 (1/−5 emas) */
+const invFrac = (d: number) => (d === 1 ? "" : d === -1 ? "-" : d < 0 ? `-\\frac{1}{${tn(-d)}}` : `\\frac{1}{${tn(d)}}`);
+
+/* ------------------------------------------------------------------ */
+/* Tushuntirishli yechimlar                                            */
+/* ------------------------------------------------------------------ */
+
+export function sizeExplain(m: number, n: number, p: number, q: number): ReactNode[] {
+  const ok = n === p;
+  return [
+    <>
+      <b>Qoida:</b> <Tex>{"A\\cdot B"}</Tex> ko'paytmada A ning har bir <b>satri</b> B ning har bir <b>ustuniga</b> ko'paytiriladi. Buning
+      uchun A ning satridagi sonlar soni (ya'ni A ning ustunlari soni) B ning ustunidagi sonlar soniga (B ning satrlari soniga) teng bo'lishi
+      kerak — aks holda juftlab bo'lmaydi.
+    </>,
+    <>
+      <b>Ichki sonlarni solishtiramiz:</b> <Tex>{`A_{${m}\\times\\color{#ffd166}{${n}}}\\cdot B_{\\color{#ffd166}{${p}}\\times${q}}`}</Tex> —{" "}
+      {ok ? <>teng (<Tex>{`${n}=${p}`}</Tex>), ko'paytirish mumkin.</> : <>teng emas (<Tex>{`${n}\\neq${p}`}</Tex>), ko'paytirib <b>bo'lmaydi</b>.</>}
+    </>,
+    ...(ok
+      ? [<>
+          <b>Natija tartibi tashqi sonlardan:</b> A nechta satrga ega bo'lsa, natijada shuncha satr ({m}); B nechta ustunga ega bo'lsa,
+          shuncha ustun ({q}). Javob: <b>{m}×{q}</b>.
+        </>]
+      : []),
+  ];
+}
+
+export function linExplain(A: number[][], Bm: number[][], k: number, m: number): ReactNode[] {
+  const kA = A.map((r) => r.map((x) => k * x)), mB = Bm.map((r) => r.map((x) => m * x));
+  const R2 = kA.map((r, i) => r.map((x, j) => x + mB[i][j]));
+  const elem = (X: number[][], s: number) => `\\begin{pmatrix} ${X.map((r) => r.map((x) => `${tn(s)}\\cdot${tp(x)}`).join(" & ")).join(" \\\\ ")} \\end{pmatrix}`;
+  return [
+    <>
+      <b>Songa ko'paytirish:</b> <Tex>{`${tn(k)}A`}</Tex> da A ning <b>har bir</b> elementi <Tex>{tn(k)}</Tex> ga ko'paytiriladi:
+      <Tex block>{`${tn(k)}A = ${elem(A, k)} = ${tmat(kA)}`}</Tex>
+    </>,
+    <>
+      Xuddi shunday <Tex>{`${tn(m)}B`}</Tex>:
+      <Tex block>{`${tn(m)}B = ${elem(Bm, m)} = ${tmat(mB)}`}</Tex>
+    </>,
+    <>
+      <b>Qo'shish:</b> ikkala matritsa bir xil tartibli (2×2), shuning uchun <b>bir xil joyda turgan</b> sonlarni qo'shamiz:
+      <Tex block>{`\\begin{pmatrix} ${kA.map((r, i) => r.map((x, j) => `${tn(x)} + ${tp(mB[i][j])}`).join(" & ")).join(" \\\\ ")} \\end{pmatrix} = ${tmat(R2)}`}</Tex>
+    </>,
+  ];
+}
+
+/** Bitta element: (AB)_ij */
+function cellStep(A: number[][], Bm: number[][], i: number, j: number) {
+  const prods = A[i].map((x, k) => x * Bm[k][j]);
+  const s = prods.reduce((a, b) => a + b, 0);
+  return (
+    <>
+      <b>Natijaning {i + 1}-satr, {j + 1}-ustundagi elementi:</b> A ning <span style={{ color: Y }}>{i + 1}-satrini</span> B ning{" "}
+      <span style={{ color: R }}>{j + 1}-ustuniga</span> ko'paytiramiz — 1-son 1-son bilan, 2-son 2-son bilan va hokazo, keyin qo'shamiz:
+      <Tex block>{`${hlRow(A, i)}${hlCol(Bm, j)}:\\quad ${cellTex(A, Bm, i, j)}`}</Tex>
+      {A[i].length > 1 && <>Ya'ni <Tex>{`${prods.map(tp).join(" + ")} = ${tn(s)}`}</Tex>.</>}
+    </>
+  );
+}
+
+export function cellExplain(A: number[][], Bm: number[][], i: number, j: number): ReactNode[] {
+  return [
+    <>
+      <b>Qaysi satr va qaysi ustun kerak?</b> Natijaning <Tex>{`(${i + 1},${j + 1})`}</Tex> elementi uchun A ning <b>{i + 1}-satri</b> va B ning{" "}
+      <b>{j + 1}-ustuni</b> olinadi (satr raqami — birinchi matritsadan, ustun raqami — ikkinchisidan).
+    </>,
+    cellStep(A, Bm, i, j),
+  ];
+}
+
+export function prodExplain(A: number[][], Bm: number[][]): ReactNode[] {
+  const m = A.length, n = A[0].length, q = Bm[0].length;
+  const P = mul(A, Bm);
+  const steps: ReactNode[] = [
+    <>
+      <b>Avval ko'paytirish mumkinmi, tekshiramiz.</b> <Tex>{`A_{${m}\\times${n}}\\cdot B_{${Bm.length}\\times${q}}`}</Tex>: ichki sonlar{" "}
+      <Tex>{`${n}=${Bm.length}`}</Tex> — mumkin. Natija tartibi tashqi sonlardan: <b>{m}×{q}</b>, ya'ni {m * q} ta element topamiz.
+    </>,
+  ];
+  for (let i = 0; i < m; i++) for (let j = 0; j < q; j++) steps.push(cellStep(A, Bm, i, j));
+  steps.push(
+    <>
+      <b>Topilgan sonlarni o'z joyiga yozamiz:</b> <Tex>{`A\\cdot B = ${tmat(P)}`}</Tex>.
+      {m !== q || n !== Bm.length ? <> Diqqat: <Tex>{"B\\cdot A"}</Tex> butunlay boshqa (hatto boshqa tartibli) bo'lardi — matritsalarda <Tex>{"AB\\neq BA"}</Tex>.</> : <> Umuman <Tex>{"AB\\neq BA"}</Tex> — tartib muhim.</>}
+    </>,
+  );
+  return steps;
+}
+
+export function trExplain(A: number[][], i: number, j: number): ReactNode[] {
+  const At = T(A);
+  return [
+    <>
+      <b>Transponirlash</b> — satrlarni ustun qilib yozish: A ning 1-satri <Tex>{"A^T"}</Tex> ning 1-ustuni bo'ladi, 2-satri — 2-ustuni.
+      Shuning uchun indekslar o'rin almashadi: <Tex>{"(A^T)_{ij} = a_{ji}"}</Tex>.
+    </>,
+    <>
+      <b>Butun <Tex>{"A^T"}</Tex> ni yozamiz</b> ({A.length}×{A[0].length} edi, {At.length}×{At[0].length} bo'ldi):
+      <Tex block>{`A=${tmat(A)}\\quad\\longrightarrow\\quad A^T=${tmat(At)}`}</Tex>
+    </>,
+    <>
+      <b>Kerakli element:</b> <Tex>{`(A^T)_{${i}${j}} = a_{${j}${i}}`}</Tex> — A ning {j}-satri, {i}-ustunidagi son: <Tex>{tn(A[j - 1][i - 1])}</Tex>.
+    </>,
+  ];
+}
+
+export function inv2Explain(A: number[][]): ReactNode[] {
+  const [[a, b], [cc, d]] = A;
+  const D = det2(A);
+  const adj = [[d, -b], [-cc, a]];
+  const inv = adj.map((r) => r.map((x) => x / D));
+  const chk = [a * inv[0][0] + b * inv[1][0], a * inv[0][1] + b * inv[1][1]];
+  return [
+    <>
+      <b>1-qadam: determinant.</b> Teskari matritsa faqat determinant 0 bo'lmaganda mavjud (formulada determinantga bo'linadi):
+      <Tex block>{`\\det A = ${d2calc(A)}`}</Tex>
+      <Tex>{`${tn(D)}\\neq0`}</Tex> — teskarisi bor.
+    </>,
+    <>
+      <b>2-qadam: bosh diagonaldagi sonlarning o'rnini almashtiramiz</b> (<Tex>{tn(a)}</Tex> va <Tex>{tn(d)}</Tex>), <b>yon diagonaldagi sonlarning
+      ishorasini o'zgartiramiz</b> (<Tex>{tn(b)}</Tex> va <Tex>{tn(cc)}</Tex>):
+      <Tex block>{`${tmat(A)}\\quad\\longrightarrow\\quad ${tmat(adj)}`}</Tex>
+    </>,
+    <>
+      <b>3-qadam: har bir sonni determinantga (<Tex>{tn(D)}</Tex> ga) bo'lamiz:</b>
+      <Tex block>{`A^{-1} = ${invFrac(D)}${tmat(adj)}${D === 1 ? "" : ` = ${tmat(inv)}`}`}</Tex>
+    </>,
+    <>
+      <b>Tekshiruv:</b> <Tex>{"A\\cdot A^{-1}"}</Tex> ning 1-satri <Tex>{"(1;\\ 0)"}</Tex> bo'lishi kerak:{" "}
+      <Tex>{`${tp(a)}\\cdot${tp(inv[0][0])} + ${tp(b)}\\cdot${tp(inv[1][0])} = ${tn(chk[0])},\\quad ${tp(a)}\\cdot${tp(inv[0][1])} + ${tp(b)}\\cdot${tp(inv[1][1])} = ${tn(chk[1])}`}</Tex>{" "}
+      {chk[0] === 1 && chk[1] === 0 ? "✓" : "✗"}
+    </>,
+  ];
+}
+
+/** 3×3 teskari matritsa: to'liq tushuntirish */
+export function inv3Explain(A: number[][]): ReactNode[] {
+  const D = det3(A);
+  const C = A.map((_, i) => A.map((__, j) => ((i + j) % 2 ? -1 : 1) * det2(minorOf(A, i, j))));
+  const adj = T(C);
+  return [
+    <>
+      <b>Reja.</b> 3×3 uchun formula: <Tex>{"A^{-1}=\\frac{1}{\\det A}\\,(A_{ij})^T"}</Tex>. Ya'ni: (1) determinantni topamiz, (2) har bir element
+      uchun algebraik to'ldiruvchini topamiz (9 ta), (3) ularni jadval qilib <b>transponirlaymiz</b>, (4) determinantga bo'lamiz.
+    </>,
+    <>
+      <b>1-qadam: determinant</b> (1-satr bo'yicha Laplas):
+      <Tex block>{`\\det A = ${tp(A[0][0])}\\cdot${tp(C[0][0])} + ${tp(A[0][1])}\\cdot${tp(C[0][1])} + ${tp(A[0][2])}\\cdot${tp(C[0][2])} = ${tn(D)}`}</Tex>
+      (bu yerdagi <Tex>{"A_{11}, A_{12}, A_{13}"}</Tex> keyingi qadamda topiladi). <Tex>{`${tn(D)}\\neq0`}</Tex> — teskarisi bor.
+    </>,
+    <>
+      <b>2-qadam: algebraik to'ldiruvchilar.</b> Har biri uchun: o'sha satr va ustunni o'chiramiz, qolgan 2×2 determinantni hisoblaymiz va
+      shaxmat ishorasini qo'yamiz <Tex>{"\\begin{smallmatrix}+&-&+\\\\-&+&-\\\\+&-&+\\end{smallmatrix}"}</Tex>:
+      <Tex block>{`\\begin{gathered} ${[0, 1, 2].map((i) => [0, 1, 2].map((j) => `A_{${i + 1}${j + 1}} = ${(i + j) % 2 ? "-" : "+"}(${d2calc(minorOf(A, i, j))}) = ${tn(C[i][j])}`).join(",\\quad ")).join(" \\\\ ")} \\end{gathered}`}</Tex>
+    </>,
+    <>
+      <b>3-qadam: jadval tuzib, transponirlaymiz.</b> Algebraik to'ldiruvchilarni o'z joyiga yozamiz va satrlarni ustunga aylantiramiz.
+      Nega transponirlash kerak: <Tex>{"A_{ij}"}</Tex> teskari matritsada <Tex>{"(j,\\,i)"}</Tex> o'ringa tushadi — shundagina{" "}
+      <Tex>{"A\\cdot A^{-1}=E"}</Tex> bo'ladi.
+      <Tex block>{`(A_{ij}) = ${tmat(C)}\\quad\\longrightarrow\\quad (A_{ij})^T = ${tmat(adj)}`}</Tex>
+    </>,
+    <>
+      <b>4-qadam: determinantga bo'lamiz:</b>
+      <Tex block>{`A^{-1} = ${invFrac(D)}${tmat(adj)}${Math.abs(D) === 1 ? (D === -1 ? ` = ${tmat(adj.map((r) => r.map((x) => -x)))}` : "") : ` = ${tmat(adj.map((r) => r.map((x) => x / D)))}`}`}</Tex>
+    </>,
+  ];
+}
+
+/** 3×3 teskari matritsaning bitta elementi */
+export function inv3CellExplain(A: number[][], i: number, j: number): ReactNode[] {
+  const D = det3(A);
+  const C = A.map((_, a) => A.map((__, b) => ((a + b) % 2 ? -1 : 1) * det2(minorOf(A, a, b))));
+  const s = (i + j) % 2 ? -1 : 1;
+  const mm = minorOf(A, j, i);
+  const v = C[j][i] / D;
+  return [
+    <>
+      <b>Formula:</b> <Tex>{"A^{-1}=\\frac{1}{\\det A}\\,(A_{ij})^T"}</Tex>. Transponirlangani uchun <Tex>{`A^{-1}`}</Tex> ning{" "}
+      <Tex>{`(${i + 1},${j + 1})`}</Tex> o'rnida <Tex>{`A_{${j + 1}${i + 1}}`}</Tex> turadi (indekslar almashgan!). Demak
+      <Tex block>{`(A^{-1})_{${i + 1}${j + 1}} = \\frac{A_{${j + 1}${i + 1}}}{\\det A}`}</Tex>
+    </>,
+    <>
+      <b>Determinant</b> (1-satr bo'yicha Laplas):{" "}
+      <Tex>{`\\det A = ${tp(A[0][0])}\\cdot${tp(C[0][0])} + ${tp(A[0][1])}\\cdot${tp(C[0][1])} + ${tp(A[0][2])}\\cdot${tp(C[0][2])} = ${tn(D)}`}</Tex>
+    </>,
+    <>
+      <b><Tex>{`A_{${j + 1}${i + 1}}`}</Tex>:</b> {j + 1}-satr va {i + 1}-ustunni o'chiramiz, ishora <Tex>{`(-1)^{${j + 1}+${i + 1}} = ${s}`}</Tex>:
+      <Tex block>{`${grayed(A, j, i)}\\quad\\longrightarrow\\quad A_{${j + 1}${i + 1}} = ${s > 0 ? "" : "-"}(${d2calc(mm)}) = ${tn(C[j][i])}`}</Tex>
+    </>,
+    <><b>Bo'lamiz:</b> <Tex>{`(A^{-1})_{${i + 1}${j + 1}} = \\frac{${tn(C[j][i])}}{${tn(D)}} = ${tn(v)}`}</Tex>.</>,
+  ];
+}
+
+const EINV3 = [[2, 1, 0], [1, 1, 1], [0, 1, 3]];
 
 export const T2: PrepTopic = {
   n: 2,
@@ -63,54 +270,49 @@ export const T2: PrepTopic = {
       title: "Tartib va turlar",
       rule: <>Tartib — avval satrlar soni, keyin ustunlar soni. <b>Kvadrat</b> matritsa: satrlar soni ustunlar soniga teng. <b>Nol</b> matritsa: hamma element 0. <b>Birlik</b> matritsa <Tex>{"E"}</Tex>: kvadrat, bosh diagonalda 1, qolgan joyda 0. <b>Diagonal</b> matritsa: diagonaldan tashqari hamma element 0.</>,
       steps: [
-        <><Tex>{tmat([[1, 0, -5], [2, 7, 3]])}</Tex>: 2 ta satr, 3 ta ustun, demak tartibi <b>2×3</b> (3×2 emas!).</>,
-        <>Birlik matritsa: <Tex>{"E_2=\\begin{pmatrix}1&0\\\\0&1\\end{pmatrix},\\ E_3=\\begin{pmatrix}1&0&0\\\\0&1&0\\\\0&0&1\\end{pmatrix}"}</Tex>. <Tex>{"\\begin{pmatrix}0&1\\\\1&0\\end{pmatrix}"}</Tex> — birlik EMAS (1 lar yon diagonalda).</>,
-        <>Birlik matritsa sonlardagi "1" kabi: <Tex>{"AE = EA = A"}</Tex>.</>,
+        <><b>Tartibni aniqlash:</b> <Tex>{tmat([[1, 0, -5], [2, 7, 3]])}</Tex> — gorizontal qatorlarni (satrlarni) sanaymiz: 2 ta; vertikal qatorlarni (ustunlarni): 3 ta. Avval satrlar yoziladi, demak tartibi <b>2×3</b> (3×2 emas!).</>,
+        <><b>Birlik matritsani tanish:</b> u kvadrat bo'lishi, <b>bosh diagonalida</b> (chap yuqoridan o'ng pastga) 1, qolgan joyda 0 bo'lishi kerak: <Tex>{"E_2=\\begin{pmatrix}1&0\\\\0&1\\end{pmatrix},\\ E_3=\\begin{pmatrix}1&0&0\\\\0&1&0\\\\0&0&1\\end{pmatrix}"}</Tex>. <Tex>{"\\begin{pmatrix}0&1\\\\1&0\\end{pmatrix}"}</Tex> — birlik EMAS: 1 lar yon diagonalda.</>,
+        <><b>Nega "birlik"?</b> U sonlardagi 1 kabi ishlaydi: istalgan matritsani E ga ko'paytirsak, o'zgarmaydi — <Tex>{"A\\cdot E = E\\cdot A = A"}</Tex>.</>,
+        <><b>Ko'paytma tartibi:</b> <Tex>{"A_{m\\times n}\\cdot B_{n\\times k}"}</Tex> — ichki sonlar teng bo'lsa ko'paytirish mumkin, natija <Tex>{"m\\times k"}</Tex>.</>,
       ],
+      gens: ["size"],
     },
     {
       title: "Qo'shish, ayirish, songa ko'paytirish",
       rule: <>Faqat <b>bir xil tartibli</b> matritsalar qo'shiladi: bir xil joyda turgan elementlar qo'shiladi. Songa ko'paytirishda <b>har bir</b> element shu songa ko'paytiriladi.</>,
       formula: "\\begin{pmatrix}a&b\\\\c&d\\end{pmatrix}+\\begin{pmatrix}p&q\\\\r&s\\end{pmatrix}=\\begin{pmatrix}a+p&b+q\\\\c+r&d+s\\end{pmatrix},\\qquad k\\cdot\\begin{pmatrix}a&b\\\\c&d\\end{pmatrix}=\\begin{pmatrix}ka&kb\\\\kc&kd\\end{pmatrix}",
-      steps: [
-        <><Tex>{"A=\\begin{pmatrix}1&2\\\\3&4\\end{pmatrix},\\ B=\\begin{pmatrix}0&-1\\\\5&2\\end{pmatrix}"}</Tex>. <Tex>{"2A - B"}</Tex> ni topamiz.</>,
-        <><Tex>{"2A=\\begin{pmatrix}2&4\\\\6&8\\end{pmatrix}"}</Tex> — har bir element 2 ga.</>,
-        <><Tex>{"2A-B=\\begin{pmatrix}2-0&4-(-1)\\\\6-5&8-2\\end{pmatrix}=\\begin{pmatrix}2&5\\\\1&6\\end{pmatrix}"}</Tex></>,
-      ],
+      steps: [<>Misol: <Tex>{"A=\\begin{pmatrix}1&2\\\\3&4\\end{pmatrix},\\ B=\\begin{pmatrix}0&-1\\\\5&2\\end{pmatrix}"}</Tex> bo'lsa, <Tex>{"2A - B"}</Tex> ni topamiz (<Tex>{"-B"}</Tex> — bu <Tex>{"(-1)\\cdot B"}</Tex>).</>, ...linExplain([[1, 2], [3, 4]], [[0, -1], [5, 2]], 2, -1)],
+      gens: ["lin"],
     },
     {
       title: "Ko'paytirish: satrni ustunga",
       rule: <>Natijaning i-satr, j-ustundagi elementini topish uchun A ning <span style={{ color: Y }}>i-satrini</span> va B ning <span style={{ color: R }}>j-ustunini</span> olamiz, elementlarni juft-juft ko'paytirib, qo'shamiz. Shart: A ning ustunlari soni B ning satrlari soniga teng bo'lishi kerak.</>,
       formula: `\\begin{pmatrix} ${c(Y, "a_1")} & ${c(Y, "a_2")} & ${c(Y, "a_3")} \\end{pmatrix}\\cdot\\begin{pmatrix} ${c(R, "b_1")} \\\\ ${c(R, "b_2")} \\\\ ${c(R, "b_3")} \\end{pmatrix} = ${c(Y, "a_1")}${c(R, "b_1")} + ${c(Y, "a_2")}${c(R, "b_2")} + ${c(Y, "a_3")}${c(R, "b_3")}`,
-      steps: [
-        <><Tex>{`A=${tmat(EA)}_{2\\times3},\\ B=${tmat(EB)}_{3\\times2}`}</Tex>. Ichki sonlar teng (3 va 3), demak ko'paytirish mumkin. Natija tartibi tashqi sonlardan: <b>2×2</b>.</>,
-        <><Tex>{`(AB)_{11}: ${hlRow(EA, 0)}${hlCol(EB, 0)} \\to ${cellTex(EA, EB, 0, 0)}`}</Tex></>,
-        <><Tex>{`(AB)_{12}: ${hlRow(EA, 0)}${hlCol(EB, 1)} \\to ${cellTex(EA, EB, 0, 1)}`}</Tex></>,
-        <><Tex>{`(AB)_{21}: ${hlRow(EA, 1)}${hlCol(EB, 0)} \\to ${cellTex(EA, EB, 1, 0)}`}</Tex></>,
-        <><Tex>{`(AB)_{22}: ${hlRow(EA, 1)}${hlCol(EB, 1)} \\to ${cellTex(EA, EB, 1, 1)}`}</Tex></>,
-        <><Tex>{`AB = ${tmat(mul(EA, EB))}`}</Tex>. Diqqat: <Tex>{"BA"}</Tex> 3×3 bo'lardi — umuman <Tex>{"AB\\neq BA"}</Tex>.</>,
-      ],
+      steps: [<>Misol: <Tex>{`A=${tmat(EA)},\\ B=${tmat(EB)}`}</Tex>. <Tex>{"A\\cdot B"}</Tex> ni topamiz.</>, ...prodExplain(EA, EB)],
+      anim: prodAnim(EA, EB),
+      gens: ["cell", "prod"],
     },
     {
       title: "Transponirlash",
       rule: <>Transponirlash: 1-satr 1-ustun bo'lib yoziladi, 2-satr 2-ustun bo'lib va hokazo. <Tex>{"m\\times n"}</Tex> tartibli matritsa <Tex>{"n\\times m"}</Tex> tartibli bo'ladi.</>,
       formula: "\\begin{pmatrix}a&b&c\\\\d&e&f\\end{pmatrix}^T=\\begin{pmatrix}a&d\\\\b&e\\\\c&f\\end{pmatrix}",
-      steps: [
-        <><Tex>{`${tmat(EA)}^T = ${tmat(EA[0].map((_, j) => EA.map((r) => r[j])))}`}</Tex> — 1-satr (1, 2, 0) endi 1-ustun.</>,
-        <>Xossa: <Tex>{"(AB)^T = B^TA^T"}</Tex> (tartib almashadi!).</>,
-      ],
+      steps: [<>Misol: <Tex>{`A=${tmat(EA)}`}</Tex>. <Tex>{"A^T"}</Tex> va uning <Tex>{"(3,2)"}</Tex> elementini topamiz.</>, ...trExplain(EA, 3, 2), <>Foydali xossa: <Tex>{"(AB)^T = B^TA^T"}</Tex> — tartib almashadi!</>],
+      gens: ["tr"],
     },
     {
       title: "Teskari matritsa (2×2)",
       rule: <>Teskari matritsa faqat determinant noldan farqli bo'lsa mavjud. 2×2 uchun uch qadam: <b>bosh diagonaldagi sonlarning o'rnini almashtiring</b>, <b>yon diagonaldagi sonlarning ishorasini o'zgartiring</b>, <b>hammasini determinantga bo'ling</b>.</>,
       formula: "\\begin{pmatrix}a&b\\\\c&d\\end{pmatrix}^{-1}=\\frac{1}{ad-bc}\\begin{pmatrix}d&-b\\\\-c&a\\end{pmatrix}",
-      steps: [
-        <><Tex>{"A=\\begin{pmatrix}3&1\\\\5&2\\end{pmatrix}"}</Tex></>,
-        <><Tex>{"\\det A = 3\\cdot2-1\\cdot5 = 1 \\neq 0"}</Tex> ✓ teskarisi bor.</>,
-        <>3 va 2 o'rin almashadi, 1 va 5 ishorasi o'zgaradi: <Tex>{"\\begin{pmatrix}2&-1\\\\-5&3\\end{pmatrix}"}</Tex></>,
-        <>Determinantga (1 ga) bo'lamiz: <Tex>{"A^{-1}=\\begin{pmatrix}2&-1\\\\-5&3\\end{pmatrix}"}</Tex>. Tekshiruv: <Tex>{"AA^{-1}=E"}</Tex>.</>,
-        <>3×3 uchun: <Tex>{"A^{-1}=\\frac{1}{|A|}\\begin{pmatrix}A_{11}&A_{21}&A_{31}\\\\A_{12}&A_{22}&A_{32}\\\\A_{13}&A_{23}&A_{33}\\end{pmatrix}"}</Tex> — algebraik to'ldiruvchilar <b>transponirlangan</b> holda.</>,
-      ],
+      steps: [<>Misol: <Tex>{"A=\\begin{pmatrix}3&1\\\\5&2\\end{pmatrix}"}</Tex> ning teskarisini topamiz.</>, ...inv2Explain([[3, 1], [5, 2]])],
+      anim: inv2Anim([[3, 1], [5, 2]]),
+      gens: ["inv"],
+    },
+    {
+      title: "Teskari matritsa (3×3)",
+      rule: <>Determinantni topamiz; har bir element uchun algebraik to'ldiruvchini hisoblaymiz; ularni jadval qilib <b>transponirlaymiz</b>; determinantga bo'lamiz.</>,
+      formula: "A^{-1}=\\frac{1}{\\det A}\\begin{pmatrix}A_{11}&A_{21}&A_{31}\\\\A_{12}&A_{22}&A_{32}\\\\A_{13}&A_{23}&A_{33}\\end{pmatrix}",
+      steps: [<>Misol: <Tex>{`A=${tmat(EINV3)}`}</Tex> ning teskarisini topamiz.</>, ...inv3Explain(EINV3)],
+      gens: ["inv3"],
     },
   ],
   mistakes: [
@@ -135,10 +337,7 @@ export const T2: PrepTopic = {
         return {
           q: <><Tex>{`A_{${m}\\times${n}}\\cdot B_{${p}\\times${q}}`}</Tex> ko'paytmaning tartibi qanday?</>,
           choice: { options: uniq, correct },
-          steps: [
-            <>Ichki sonlar: A ning ustunlari <b>{n}</b>, B ning satrlari <b>{p}</b>.</>,
-            ok ? <>{n} = {p} ✓ — ko'paytirish mumkin. Natija tashqi sonlardan: <b>{m}×{q}</b>.</> : <>{n} ≠ {p} — ko'paytirib <b>bo'lmaydi</b>.</>,
-          ],
+          steps: sizeExplain(m, n, p, q),
         };
       },
     },
@@ -152,13 +351,11 @@ export const T2: PrepTopic = {
         const v = mul(A, Bm)[i][j];
         const wrong = A[i].reduce((s, x, k) => s + x * Bm[k][1 - j], 0);
         return {
-          q: <><Tex>{`A=${tmat(A)},\\ B=${tmat(Bm)}`}</Tex>. <Tex>{`AB`}</Tex> ko'paytmaning <Tex>{`(${i + 1},${j + 1})`}</Tex> elementini toping.</>,
+          q: <><Tex>{`A=${tmat(A)},\\ B=${tmat(Bm)}`}</Tex>. <Tex>{`A\\cdot B`}</Tex> ko'paytmaning <Tex>{`(${i + 1},${j + 1})`}</Tex> elementini toping.</>,
           ans: [{ v }],
           traps: wrong !== v ? [{ v: [wrong], why: "Boshqa ustunni oldingiz: j-element uchun B ning j-ustuni kerak." }] : [],
-          steps: [
-            <>A ning <b>{i + 1}-satri</b> va B ning <b>{j + 1}-ustuni</b>: <Tex>{`${hlRow(A, i)} ${hlCol(Bm, j)}`}</Tex></>,
-            <><Tex>{cellTex(A, Bm, i, j)}</Tex></>,
-          ],
+          steps: cellExplain(A, Bm, i, j),
+          anim: (() => { const f = prodAnim(A, Bm); const k = 1 + 2 * (i * 2 + j); return [f[0], f[k], f[k + 1]]; })(),
         };
       },
     },
@@ -173,7 +370,8 @@ export const T2: PrepTopic = {
           q: <><Tex>{`${tmat(A)}\\cdot${tmat(Bm)}`}</Tex> ni hisoblang.</>,
           ans: [[0, 0], [0, 1], [1, 0], [1, 1]].map(([i, j]) => ({ label: <Tex>{`c_{${i + 1}${j + 1}}`}</Tex>, v: P[i][j] })),
           traps: [{ v: el.flat(), why: "Element-element ko'paytirdingiz. Matritsalar 'satrni ustunga' ko'paytiriladi." }],
-          steps: [0, 1].flatMap((i) => [0, 1].map((j) => <><Tex>{`c_{${i + 1}${j + 1}}: ${cellTex(A, Bm, i, j)}`}</Tex></>)),
+          steps: prodExplain(A, Bm),
+          anim: prodAnim(A, Bm),
         };
       },
     },
@@ -185,12 +383,9 @@ export const T2: PrepTopic = {
         const k = rnz(-3, 3), m = rnz(-3, 3);
         const R2 = A.map((r, i) => r.map((x, j) => k * x + m * Bm[i][j]));
         return {
-          q: <><Tex>{`A=${tmat(A)},\\ B=${tmat(Bm)}`}</Tex>. <Tex>{`${tn(k)}A ${m < 0 ? "-" : "+"} ${tn(Math.abs(m))}B`}</Tex> ni toping.</>,
+          q: <><Tex>{`A=${tmat(A)},\\ B=${tmat(Bm)}`}</Tex>. <Tex>{`${k === 1 ? "" : k === -1 ? "-" : tn(k)}A ${m < 0 ? "-" : "+"} ${Math.abs(m) === 1 ? "" : tn(Math.abs(m))}B`}</Tex> ni toping.</>,
           ans: [[0, 0], [0, 1], [1, 0], [1, 1]].map(([i, j]) => ({ label: <Tex>{`(${i + 1},${j + 1})`}</Tex>, v: R2[i][j] })),
-          steps: [
-            <><Tex>{`${tn(k)}A = ${tmat(A.map((r) => r.map((x) => k * x)))},\\quad ${tn(m)}B = ${tmat(Bm.map((r) => r.map((x) => m * x)))}`}</Tex></>,
-            <>Mos elementlarni qo'shamiz: <Tex>{tmat(R2)}</Tex></>,
-          ],
+          steps: linExplain(A, Bm, k, m),
         };
       },
     },
@@ -204,11 +399,8 @@ export const T2: PrepTopic = {
         return {
           q: <><Tex>{`A=${tmat(A)}`}</Tex>. <Tex>{`A^T`}</Tex> ning <Tex>{`(${i},${j})`}</Tex> elementi nechaga teng?</>,
           ans: [{ v }],
-          traps: i <= 2 && j <= 3 && A[i - 1]?.[j - 1] !== v ? [{ v: [A[i - 1][j - 1]], why: "Bu A ning o'zidagi element. $A^T$ ning i-satr, j-ustundagi elementi A ning j-satr, i-ustundagi elementiga teng: $(A^T)_{ij}=a_{ji}$." }] : [],
-          steps: [
-            <><Tex>{`(A^T)_{${i}${j}} = a_{${j}${i}}`}</Tex> — indekslar almashadi.</>,
-            <>A ning {j}-satri, {i}-ustuni: <b>{v}</b>. <Tex>{`A^T=${tmat(A[0].map((_, jj) => A.map((r) => r[jj])))}`}</Tex></>,
-          ],
+          traps: i <= 2 && A[i - 1]?.[j - 1] !== v ? [{ v: [A[i - 1][j - 1]], why: "Bu A ning o'zidagi element. $A^T$ ning i-satr, j-ustundagi elementi A ning j-satr, i-ustundagi elementiga teng: $(A^T)_{ij}=a_{ji}$." }] : [],
+          steps: trExplain(A, i, j),
         };
       },
     },
@@ -228,11 +420,30 @@ export const T2: PrepTopic = {
           q: <><Tex>{`${tmat(A)}^{-1}`}</Tex> ni toping.</>,
           ans: [[0, 0], [0, 1], [1, 0], [1, 1]].map(([i, j]) => ({ label: <Tex>{`(${i + 1},${j + 1})`}</Tex>, v: inv[i][j] })),
           traps: [{ v: [dd, -b, -cc, a], why: "Determinantga bo'lishni unutdingiz." }, { v: [a / d, -b / d, -cc / d, dd / d], why: "Bosh diagonal elementlarini o'rin almashtirish kerak edi." }],
-          steps: [
-            <><Tex>{`\\det A = ${tp(a)}\\cdot${tp(dd)} - ${tp(b)}\\cdot${tp(cc)} = ${tn(d)}`}</Tex></>,
-            <>Almashtir va ishorani o'zgartir: <Tex>{`\\begin{pmatrix} ${tn(dd)} & ${tn(-b)} \\\\ ${tn(-cc)} & ${tn(a)} \\end{pmatrix}`}</Tex></>,
-            <><Tex>{`${tn(d)}`}</Tex> ga bo'lamiz: <Tex>{tmat(inv)}</Tex></>,
-          ],
+          steps: inv2Explain(A),
+          anim: inv2Anim(A),
+        };
+      },
+    },
+    {
+      id: "inv3",
+      title: "Teskari 3×3 (element)",
+      make: () => {
+        let A = [[0]];
+        let D = 0;
+        while (![1, -1, 2, -2].includes(D)) {
+          A = [0, 1, 2].map(() => [0, 1, 2].map(() => ri(-2, 3)));
+          D = det3(A);
+        }
+        const i = ri(0, 2), j = ri(0, 2);
+        const C = (a: number, b: number) => ((a + b) % 2 ? -1 : 1) * det2(minorOf(A, a, b));
+        const v = C(j, i) / D;
+        const wrong = C(i, j) / D;
+        return {
+          q: <><Tex>{`A=${tmat(A)}`}</Tex>. <Tex>{"A^{-1}"}</Tex> ning <Tex>{`(${i + 1},${j + 1})`}</Tex> elementini toping.</>,
+          ans: [{ v }],
+          traps: wrong !== v ? [{ v: [wrong], why: `Transponirlashni unutdingiz: $(A^{-1})_{${i + 1}${j + 1}}$ uchun $A_{${j + 1}${i + 1}}$ olinadi, $A_{${i + 1}${j + 1}}$ emas.` }] : [],
+          steps: inv3CellExplain(A, i, j),
         };
       },
     },

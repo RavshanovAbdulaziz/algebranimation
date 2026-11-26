@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { record } from "../lib/review";
 import { Tex } from "../components/Tex";
+import { AnimPlayer, type Frame } from "./anim";
 
 /* ================================================================== */
 /* Turlar                                                              */
@@ -21,6 +22,8 @@ export interface Problem {
   /** Variantli savol (son o'rniga) */
   choice?: { options: ReactNode[]; correct: number };
   steps: ReactNode[];
+  /** Animatsiyali yechim (kam matn, ko'proq vizual) */
+  anim?: Frame[];
   traps?: Trap[];
 }
 
@@ -48,6 +51,10 @@ export interface Recipe {
   steps: ReactNode[];
   /** Ixtiyoriy rasm/sxema (qoida yonida) */
   visual?: ReactNode;
+  /** Misolning animatsiyali yechimi */
+  anim?: Frame[];
+  /** Usuldan keyin "O'zingiz yeching" uchun generatorlar (topic.gens dagi id lar) */
+  gens?: string[];
 }
 
 export interface PrepTopic {
@@ -182,6 +189,20 @@ export function StepReveal({ steps, startOpen = 1 }: { steps: ReactNode[]; start
   );
 }
 
+
+/** Yechim: animatsiya bo'lsa — avval animatsiya, matn esa yig'ilgan holda */
+export function Solution({ p }: { p: { steps: ReactNode[]; anim?: Frame[] } }) {
+  if (!p.anim) return <StepReveal steps={p.steps} startOpen={p.steps.length} />;
+  return (
+    <>
+      <AnimPlayer frames={p.anim} />
+      <details className="am-text">
+        <summary>Matn bilan batafsil</summary>
+        <StepReveal steps={p.steps} startOpen={p.steps.length} />
+      </details>
+    </>
+  );
+}
 /* ================================================================== */
 /* UI: mashq (cheksiz misollar)                                        */
 /* ================================================================== */
@@ -301,10 +322,103 @@ export function Practice({ topic, gens }: { topic: number; gens: Gen[] }) {
         {showSol && (
           <div className="practice-sol">
             <div className="sol-title">Yechim</div>
-            <StepReveal key={seed + "-" + gi} steps={p.steps} startOpen={res ? p.steps.length : 1} />
+            <Solution key={seed + "-" + gi} p={p} />
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+/* ================================================================== */
+/* UI: "Endi o'zingiz yeching" — har bir usuldan keyin                 */
+/* ================================================================== */
+
+/** Bitta misol: daftarga yechib, javobni yozib tekshirish yoki javob/yechimni ochish */
+function TryItem({ p, id, n }: { p: Problem; id: string; n: number }) {
+  const [vals, setVals] = useState<string[]>(() => (p.ans ?? []).map(() => ""));
+  const [picked, setPicked] = useState<number | null>(null);
+  const [res, setRes] = useState<null | { ok: boolean; trap?: ReactNode }>(null);
+  const [showAns, setShowAns] = useState(false);
+  const [showSol, setShowSol] = useState(false);
+
+  const check = () => {
+    let ok = false;
+    let trap: ReactNode | undefined;
+    if (p.choice) ok = picked === p.choice.correct;
+    else if (p.ans) {
+      const g = vals.map(parseNum) as number[];
+      if (p.unordered) {
+        const w = p.ans.map((a) => a.v).sort((a, b) => a - b), h = [...g].sort((a, b) => a - b);
+        ok = w.every((x, i) => eq(x, h[i], p.ans![0].tol));
+      } else ok = p.ans.every((a, i) => eq(a.v, g[i], a.tol));
+      if (!ok && p.traps) trap = p.traps.find((t) => t.v.length === g.length && t.v.every((v, i) => eq(v, g[i])))?.why;
+    }
+    record(id, ok);
+    setRes({ ok, trap });
+  };
+  const ready = p.choice ? picked !== null : vals.every((v) => parseNum(v) !== null);
+  const answerTex = p.ans
+    ? p.ans.map((a, i) => (a.label ? <span key={i}>{i ? ", " : ""}{a.label} <Tex>{`= ${tn(a.v)}`}</Tex></span> : <Tex key={i}>{tn(a.v)}</Tex>))
+    : p.choice ? rich(p.choice.options[p.choice.correct]) : null;
+
+  return (
+    <div className="try-item">
+      <div className="try-q"><span className="try-n">{n}</span><div>{p.q}</div></div>
+      {p.choice ? (
+        <div className="quiz-opts">
+          {p.choice.options.map((o, i) => {
+            const cls = !res ? (picked === i ? " sel" : "") : i === p.choice!.correct ? " right" : i === picked ? " wrong" : " dim";
+            return <button key={i} className={"quiz-opt" + cls} disabled={!!res} onClick={() => setPicked(i)}>{rich(o)}</button>;
+          })}
+        </div>
+      ) : (
+        <form className="practice-inputs" onSubmit={(e) => { e.preventDefault(); if (ready && !res) check(); }}>
+          {p.ans!.map((a, i) => (
+            <label key={i} className="ans-field">
+              {a.label && <span className="ans-label">{a.label}</span>}
+              <input inputMode="decimal" autoComplete="off" value={vals[i]} disabled={!!res} placeholder="javob"
+                className={res ? (res.ok ? "ok" : "no") : ""}
+                onChange={(e) => setVals(vals.map((v, j) => (j === i ? e.target.value : v)))} />
+            </label>
+          ))}
+          <button type="submit" hidden />
+        </form>
+      )}
+      <div className="try-ctl">
+        {!res && <button className="btn small" disabled={!ready} onClick={check}>Tekshirish</button>}
+        <button className="btn small ghost" onClick={() => setShowAns(!showAns)}>{showAns ? "Javobni yashirish" : "Javobni ko'rish"}</button>
+        <button className="btn small ghost" onClick={() => setShowSol(!showSol)}>{showSol ? "Yechimni yashirish" : "To'liq yechim"}</button>
+        {res && (
+          <span className={"try-verdict " + (res.ok ? "ok" : "no")}>
+            {res.ok ? "✓ To'g'ri!" : "✗ Xato"}{!res.ok && res.trap && <> — <span className="trap-inline">{rich(res.trap)}</span></>}
+          </span>
+        )}
+      </div>
+      {(showAns || (res && !res.ok)) && <div className="try-ans">Javob: {answerTex}</div>}
+      {showSol && <div className="practice-sol"><Solution p={p} /></div>}
+    </div>
+  );
+}
+
+/** Usuldan keyin: har xil koeffitsiyentli bir nechta misol, javoblari tayyor */
+export function TryIt({ topic, gens, count = 3 }: { topic: number; gens: Gen[]; count?: number }) {
+  const [round, setRound] = useState(0);
+  // Faqat "Yangi misollar" bosilganda yangilanadi (sahifa qayta chizilganda misollar o'zgarmasin)
+  const key = gens.map((g) => g.id).join(",");
+  const probs = useMemo(
+    () => Array.from({ length: count }, (_, i) => { const g = gens[i % gens.length]; return { g, p: g.make() }; }),
+    [key, count, round], // eslint-disable-line react-hooks/exhaustive-deps
+  );
+  if (!gens.length) return null;
+  return (
+    <div className="tryit">
+      <div className="tryit-head">
+        <b>✍ Endi o'zingiz yeching</b>
+        <span className="muted small">Daftarga yeching, so'ng javobingizni yozib tekshiring yoki "Javobni ko'rish"ni bosing.</span>
+      </div>
+      {probs.map(({ g, p }, i) => <TryItem key={round + "-" + i} p={p} id={`t${topic}:gen:${g.id}`} n={i + 1} />)}
+      <button className="btn small" onClick={() => setRound(round + 1)}>↻ Yangi misollar</button>
     </div>
   );
 }

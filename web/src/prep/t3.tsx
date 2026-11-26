@@ -1,6 +1,8 @@
+import type { ReactNode } from "react";
 import { Tex } from "../components/Tex";
 import { det2, det3, pick, ri, rnz, tmat, tn, tp, type PrepTopic } from "./core";
 import { gaussSteps, makeGauss, matrixSteps } from "./explain";
+import { gaussAnim, kramerAnim, matrixAnim } from "./anim";
 
 /** a·x + b·y ko'rinishidagi had yozuvi */
 const lhs = (cs: number[], vars: string[]) =>
@@ -30,15 +32,113 @@ function make3(): { A: number[][]; b: number[]; x: number[] } {
   }
 }
 
-function kramer2Steps(A: number[][], b: number[]) {
-  const D = det2(A), Dx = det2(withCol(A, b, 0)), Dy = det2(withCol(A, b, 1));
+const KC = "#58c4dd"; // almashtirilgan ustun
+
+/** j-ustuni o'ng tomondagi sonlar bilan almashtirilgan (rangli) determinant */
+const swapTex = (A: number[][], b: number[], j: number) =>
+  `\\begin{vmatrix} ${A.map((r, i) => r.map((x, k) => (k === j ? `\\color{${KC}}{${tn(b[i])}}` : tn(x))).join(" & ")).join(" \\\\ ")} \\end{vmatrix}`;
+const d2calc = (q: number[][]) => `${tp(q[0][0])}\\cdot${tp(q[1][1])} - ${tp(q[0][1])}\\cdot${tp(q[1][0])} = ${tn(det2(q))}`;
+/** 3×3 Sarrus hisobi qisqacha: (…+…+…) − (…+…+…) = … */
+const d3calc = (m: number[][]) => {
+  const P = [m[0][0] * m[1][1] * m[2][2], m[0][1] * m[1][2] * m[2][0], m[0][2] * m[1][0] * m[2][1]];
+  const M = [m[0][2] * m[1][1] * m[2][0], m[0][0] * m[1][2] * m[2][1], m[0][1] * m[1][0] * m[2][2]];
+  return `(${P.map(tp).join(" + ")}) - (${M.map(tp).join(" + ")}) = ${tn(det3(m))}`;
+};
+const NAMES2 = ["x", "y"], NAMES3 = ["x", "y", "z"];
+const ORDN = ["1", "2", "3"];
+/** tenglamaga qiymatlarni qo'yish */
+const plug = (row: number[], vals: number[]) => row.map((a, i) => `${tp(a)}\\cdot${tp(vals[i])}`).join(" + ");
+
+function kramerExplain(A: number[][], b: number[]): ReactNode[] {
+  const n = A.length;
+  const names = n === 2 ? NAMES2 : NAMES3;
+  const D = n === 2 ? det2(A) : det3(A);
+  const calc = (M: number[][]) => (n === 2 ? d2calc(M) : d3calc(M));
+  const Ds = names.map((_, j) => { const M = withCol(A, b, j); return n === 2 ? det2(M) : det3(M); });
+  const sol = Ds.map((d) => d / D);
+  const lhs0 = A[0].reduce((s, a, i) => s + a * sol[i], 0);
   return [
-    <>Asosiy determinant (koeffitsiyentlardan): <Tex>{`\\Delta = ${tmat(A, "v")} = ${tp(A[0][0])}\\cdot${tp(A[1][1])} - ${tp(A[0][1])}\\cdot${tp(A[1][0])} = ${tn(D)}`}</Tex>. <Tex>{"\\Delta\\ne0"}</Tex> — yagona yechim bor.</>,
-    <><Tex>{"\\Delta_x"}</Tex>: 1-ustun o'rniga ozod hadlar: <Tex>{`\\Delta_x = ${tmat(withCol(A, b, 0), "v")} = ${tn(Dx)}`}</Tex></>,
-    <><Tex>{"\\Delta_y"}</Tex>: 2-ustun o'rniga ozod hadlar: <Tex>{`\\Delta_y = ${tmat(withCol(A, b, 1), "v")} = ${tn(Dy)}`}</Tex></>,
-    <><Tex>{`x = \\frac{\\Delta_x}{\\Delta} = \\frac{${tn(Dx)}}{${tn(D)}} = ${tn(Dx / D)},\\quad y = \\frac{\\Delta_y}{\\Delta} = \\frac{${tn(Dy)}}{${tn(D)}} = ${tn(Dy / D)}`}</Tex></>,
+    <>
+      <b>Kramer usulining g'oyasi:</b> har bir noma'lum — ikki determinantning nisbati. Bizga {n + 1} ta determinant kerak: asosiy{" "}
+      <Tex>{"\\Delta"}</Tex> va har bir noma'lum uchun bittadan (<Tex>{names.map((v) => `\\Delta_${v}`).join(",\\ ")}</Tex>).
+      {n === 3 && <> 3×3 determinantlar Sarrus qoidasi bilan hisoblanadi: ("+" uchliklar) − ("−" uchliklar).</>}
+    </>,
+    <>
+      <b>Asosiy determinant <Tex>{"\\Delta"}</Tex></b> — noma'lumlar oldidagi sonlardan tuziladi (1-ustun — x oldidagi sonlar,
+      2-ustun — y oldidagi{n === 3 ? ", 3-ustun — z oldidagi" : ""}):
+      <Tex block>{`\\Delta = ${tmat(A, "v")} = ${calc(A)}`}</Tex>
+      <Tex>{`${tn(D)}\\neq0`}</Tex> — usul ishlaydi (keyin <Tex>{"\\Delta"}</Tex> ga bo'lamiz, nolga bo'lib bo'lmaydi), yechim yagona.
+    </>,
+    ...names.map((v, j) => (
+      <>
+        <b><Tex>{`\\Delta_${v}`}</Tex></b> — {ORDN[j]}-ustunni ({v} oldidagi sonlarni) <span style={{ color: KC }}>o'ng tomondagi sonlar</span> (
+        <Tex>{b.map(tn).join(";\\ ")}</Tex>) bilan almashtiramiz, qolgan ustunlar o'zgarmaydi:
+        <Tex block>{`\\Delta_${v} = ${swapTex(A, b, j)} = ${calc(withCol(A, b, j))}`}</Tex>
+      </>
+    )),
+    <>
+      <b>Bo'lamiz:</b>{" "}
+      <Tex>{names.map((v, j) => `${v} = \\frac{\\Delta_${v}}{\\Delta} = \\frac{${tn(Ds[j])}}{${tn(D)}} = ${tn(sol[j])}`).join(",\\qquad ")}</Tex>
+    </>,
+    <>
+      <b>Tekshiruv</b> — 1-tenglamaga qo'yamiz: <Tex>{`${plug(A[0], sol)} = ${tn(lhs0)}`}</Tex> {lhs0 === b[0] ? "✓ to'g'ri." : "✗"}
+    </>,
   ];
 }
+
+function oneDetExplain(A: number[][], b: number[], which: "D" | "Dx" | "Dy"): ReactNode[] {
+  if (which === "D") {
+    return [
+      <><b><Tex>{"\\Delta"}</Tex> — asosiy determinant.</b> U faqat noma'lumlar oldidagi sonlardan tuziladi: 1-ustunga x oldidagi sonlar, 2-ustunga y oldidagi sonlar. O'ng tomondagi sonlar kirmaydi.</>,
+      <>Hisoblaymiz (bosh diagonal minus yon diagonal): <Tex>{`\\Delta = ${tmat(A, "v")} = ${d2calc(A)}`}</Tex></>,
+    ];
+  }
+  const j = which === "Dx" ? 0 : 1;
+  const v = which === "Dx" ? "x" : "y";
+  return [
+    <>
+      <b><Tex>{`\\Delta_${v}`}</Tex> qanday tuziladi?</b> Asosiy determinantdan boshlaymiz va <b>{v} ning ustunini</b> ({j + 1}-ustun) o'ng tomondagi
+      sonlar (<Tex>{b.map(tn).join(";\\ ")}</Tex>) bilan almashtiramiz. Boshqa ustun o'zgarmaydi.
+    </>,
+    <>Hisoblaymiz: <Tex>{`\\Delta_${v} = ${swapTex(A, b, j)} = ${d2calc(withCol(A, b, j))}`}</Tex></>,
+  ];
+}
+
+function kindExplain(A: number[][], b: number[], t: "one" | "none" | "inf", k: number): ReactNode[] {
+  const D = det2(A);
+  return [
+    <><b>Avval asosiy determinantni tekshiramiz:</b> <Tex>{`\\Delta = ${tmat(A, "v")} = ${d2calc(A)}`}</Tex></>,
+    t === "one" ? (
+      <><Tex>{"\\Delta\\neq0"}</Tex> — Kramer formulalari ishlaydi, demak yechim <b>yagona</b> (sistema aniq). Grafikda: ikki to'g'ri chiziq bitta nuqtada kesishadi.</>
+    ) : (
+      <>
+        <Tex>{`\\Delta = ${tn(D)} = 0`}</Tex> — yechim yagona emas: yo yo'q, yo cheksiz ko'p. Qaysi biri ekanini aniqlash uchun tenglamalarni
+        solishtiramiz: 2-tenglamaning chap tomoni 1-sining chap tomonini <Tex>{tp(k)}</Tex> ga ko'paytirganga teng (
+        <Tex>{`${tp(A[0][0])}\\cdot${tp(k)} = ${tn(A[1][0])},\\ \\ ${tp(A[0][1])}\\cdot${tp(k)} = ${tn(A[1][1])}`}</Tex>).
+      </>
+    ),
+    ...(t === "one"
+      ? []
+      : [
+          t === "none" ? (
+            <>
+              <b>O'ng tomonni ham tekshiramiz:</b> <Tex>{`${tp(b[0])}\\cdot${tp(k)} = ${tn(k * b[0])}`}</Tex>, lekin 2-tenglamada{" "}
+              <Tex>{tn(b[1])}</Tex> turibdi. Bir xil chap tomon ikki xil songa teng bo'la olmaydi — <b>ziddiyat</b>, yechim yo'q (chiziqlar parallel).
+            </>
+          ) : (
+            <>
+              <b>O'ng tomonni ham tekshiramiz:</b> <Tex>{`${tp(b[0])}\\cdot${tp(k)} = ${tn(k * b[0])}`}</Tex> — 2-tenglamada ham aynan shu son.
+              Demak 2-tenglama 1-sining <Tex>{tp(k)}</Tex> baravari, ya'ni aslida bitta tenglama — yechim <b>cheksiz ko'p</b> (chiziqlar ustma-ust).
+            </>
+          ),
+        ]),
+  ];
+}
+
+const kramer2Steps = kramerExplain;
+// Kramer (3 noma'lum) misoli: javob x = 1, y = 2, z = 3
+const K3A = [[1, 1, 1], [1, -1, 1], [2, 1, -1]];
+const K3B = [6, 2, 1];
 
 const EXA = [[2, 1], [1, -2]];
 const EXB = [3, -1];
@@ -94,30 +194,32 @@ export const T3: PrepTopic = {
       title: "Kramer usuli (2 noma'lum)",
       rule: <>Uchta determinant hisoblanadi: <Tex>{"\\Delta"}</Tex> (delta) — noma'lumlar oldidagi sonlardan; <Tex>{"\\Delta_x"}</Tex> — x ning ustuni o'rniga o'ng tomondagi sonlar qo'yiladi; <Tex>{"\\Delta_y"}</Tex> — y ning ustuni o'rniga. Keyin bo'lamiz. Faqat <Tex>{"\\Delta\\neq0"}</Tex> (delta noldan farqli) bo'lsa ishlaydi.</>,
       formula: "x = \\frac{\\Delta_x}{\\Delta}, \\qquad y = \\frac{\\Delta_y}{\\Delta}",
-      steps: [<>Misol: <Tex>{sys(EXA, EXB, ["x", "y"])}</Tex></>, ...kramer2Steps(EXA, EXB), <>Tekshiruv: <Tex>{"2\\cdot1+1 = 3 ✓,\\ 1-2\\cdot1=-1 ✓"}</Tex></>],
+      steps: [<>Misol: <Tex>{sys(EXA, EXB, ["x", "y"])}</Tex></>, ...kramerExplain(EXA, EXB)],
+      anim: kramerAnim(EXA, EXB),
+      gens: ["s2", "sq", "dx"],
     },
     {
       title: "Kramer usuli (3 noma'lum)",
       rule: <>Xuddi shunday, faqat endi to'rtta 3-tartibli determinant (Sarrus qoidasi bilan) hisoblanadi.</>,
       formula: "x = \\frac{\\Delta_x}{\\Delta}, \\qquad y = \\frac{\\Delta_y}{\\Delta}, \\qquad z = \\frac{\\Delta_z}{\\Delta}",
-      steps: [
-        <>Misol: <Tex>{sys([[1, 1, 1], [1, -1, 1], [2, 1, -1]], [6, 2, 1], ["x", "y", "z"])}</Tex></>,
-        <><Tex>{`\\Delta = ${tmat([[1, 1, 1], [1, -1, 1], [2, 1, -1]], "v")} = ${det3([[1, 1, 1], [1, -1, 1], [2, 1, -1]])}`}</Tex></>,
-        <><Tex>{`\\Delta_x = ${tmat([[6, 1, 1], [2, -1, 1], [1, 1, -1]], "v")} = ${det3([[6, 1, 1], [2, -1, 1], [1, 1, -1]])}`}</Tex></>,
-        <><Tex>{`\\Delta_y = ${tmat([[1, 6, 1], [1, 2, 1], [2, 1, -1]], "v")} = ${det3([[1, 6, 1], [1, 2, 1], [2, 1, -1]])},\\quad \\Delta_z = ${tmat([[1, 1, 6], [1, -1, 2], [2, 1, 1]], "v")} = ${det3([[1, 1, 6], [1, -1, 2], [2, 1, 1]])}`}</Tex></>,
-        <><Tex>{"x = \\frac{6}{6}=1,\\quad y=\\frac{12}{6}=2,\\quad z=\\frac{18}{6}=3"}</Tex></>,
-      ],
+      steps: [<>Misol: <Tex>{sys(K3A, K3B, ["x", "y", "z"])}</Tex></>, ...kramerExplain(K3A, K3B)],
+      anim: kramerAnim(K3A, K3B),
+      gens: ["s3"],
     },
     {
       title: "Matritsa usuli",
       rule: <>Sistemani qisqacha <Tex>{"A\\cdot X=B"}</Tex> ko'rinishda yozamiz (A — koeffitsiyentlar jadvali, X — noma'lumlar ustuni, B — o'ng tomondagi sonlar). Ikki tomonni chapdan teskari matritsa <Tex>{"A^{-1}"}</Tex> ga ko'paytiramiz.</>,
       formula: "X = A^{-1}\\cdot B",
       steps: matrixSteps(EXA, EXB),
+      anim: matrixAnim(EXA, EXB),
+      gens: ["mat"],
     },
     {
       title: "Gauss usuli",
       rule: <>Koeffitsiyentlar va o'ng tomonni bitta jadvalga yozamiz (kengaytirilgan matritsa). Satrlar ustida amallar bajarib, diagonal ostini <b>nolga</b> keltiramiz (zinapoya ko'rinishi), so'ng pastdan yuqoriga yechamiz. Ruxsat etilgan amallar: ikki satrni almashtirish; satrni songa ko'paytirish; bir satrga boshqa satrni biror songa ko'paytirib qo'shish. <Tex>{"R_2-R_1"}</Tex> yozuvi: "2-satrdan 1-satrni ayiramiz".</>,
       steps: gaussSteps(GA, GB),
+      anim: gaussAnim(GA, GB),
+      gens: ["gauss"],
     },
     {
       title: "Yechim bormi? (Kroneker–Kapelli)",
@@ -128,6 +230,7 @@ export const T3: PrepTopic = {
         <>2-tenglamaning chap tomoni 1-sining 2 baravari, lekin o'ng tomonda <Tex>{"7\\neq2\\cdot3"}</Tex>. Bu <b>ziddiyat</b>, demak yechim yo'q (grafikda ikki to'g'ri chiziq parallel).</>,
         <>Agar o'ng tomonda 6 bo'lganida, ikki tenglama aslida bitta bo'lardi va yechim <b>cheksiz ko'p</b> bo'lardi.</>,
       ],
+      gens: ["kind"],
     },
   ],
   mistakes: [
@@ -151,6 +254,7 @@ export const T3: PrepTopic = {
           ans: [{ label: <Tex>x</Tex>, v: x[0] }, { label: <Tex>y</Tex>, v: x[1] }],
           traps: [{ v: [x[1], x[0]], why: "x va y ning o'rni almashib qoldi." }],
           steps: kramer2Steps(A, b),
+          anim: kramerAnim(A, b),
         };
       },
     },
@@ -181,9 +285,7 @@ export const T3: PrepTopic = {
           q: <><Tex>{sys(A, b, ["x", "y"])}</Tex> sistema uchun <Tex>{name}</Tex> ni hisoblang.</>,
           ans: [{ v }],
           traps: which === "Dx" ? [{ v: [Dy], why: "Siz $\\Delta_y$ ni topdingiz. $\\Delta_x$ da 1-ustun (x oldidagi sonlar) almashtiriladi." }] : which === "Dy" ? [{ v: [Dx], why: "Siz $\\Delta_x$ ni topdingiz. $\\Delta_y$ da 2-ustun almashtiriladi." }] : [],
-          steps: [
-            which === "D" ? <>Noma'lumlar oldidagi sonlardan: <Tex>{`${tmat(A, "v")} = ${tn(D)}`}</Tex></> : which === "Dx" ? <>1-ustun o'rniga o'ng tomondagi sonlar: <Tex>{`${tmat(withCol(A, b, 0), "v")} = ${tn(Dx)}`}</Tex></> : <>2-ustun o'rniga o'ng tomondagi sonlar: <Tex>{`${tmat(withCol(A, b, 1), "v")} = ${tn(Dy)}`}</Tex></>,
-          ],
+          steps: oneDetExplain(A, b, which),
         };
       },
     },
@@ -196,6 +298,7 @@ export const T3: PrepTopic = {
           q: <>Matritsa usulida yeching: <Tex>{sys(A, b, ["x", "y"])}</Tex></>,
           ans: [{ label: <Tex>x</Tex>, v: x[0] }, { label: <Tex>y</Tex>, v: x[1] }],
           steps: matrixSteps(A, b),
+          anim: matrixAnim(A, b),
         };
       },
     },
@@ -208,6 +311,7 @@ export const T3: PrepTopic = {
           q: <>Gauss usulida yeching: <Tex>{sys(A, b, ["x", "y", "z"])}</Tex></>,
           ans: [{ label: <Tex>x</Tex>, v: x[0] }, { label: <Tex>y</Tex>, v: x[1] }, { label: <Tex>z</Tex>, v: x[2] }],
           steps: gaussSteps(A, b),
+          anim: gaussAnim(A, b),
         };
       },
     },
@@ -216,16 +320,11 @@ export const T3: PrepTopic = {
       title: "3 noma'lum (Kramer)",
       make: () => {
         const { A, b, x } = make3();
-        const D = det3(A);
-        const ds = [0, 1, 2].map((j) => det3(withCol(A, b, j)));
         return {
-          q: <>Sistemani yeching: <Tex>{sys(A, b, ["x", "y", "z"])}</Tex></>,
+          q: <>Kramer usulida yeching: <Tex>{sys(A, b, ["x", "y", "z"])}</Tex></>,
           ans: [{ label: <Tex>x</Tex>, v: x[0] }, { label: <Tex>y</Tex>, v: x[1] }, { label: <Tex>z</Tex>, v: x[2] }],
-          steps: [
-            <><Tex>{`\\Delta = ${tmat(A, "v")} = ${tn(D)}`}</Tex></>,
-            ...["x", "y", "z"].map((n, j) => <><Tex>{`\\Delta_${n} = ${tmat(withCol(A, b, j), "v")} = ${tn(ds[j])}`}</Tex></>),
-            <><Tex>{`x=\\frac{${ds[0]}}{${D}}=${tn(x[0])},\\ y=\\frac{${ds[1]}}{${D}}=${tn(x[1])},\\ z=\\frac{${ds[2]}}{${D}}=${tn(x[2])}`}</Tex></>,
-          ],
+          steps: kramerExplain(A, b),
+          anim: kramerAnim(A, b),
         };
       },
     },
@@ -239,15 +338,10 @@ export const T3: PrepTopic = {
         let A: number[][], b: number[];
         if (t === "one") { const s = make2(); A = s.A; b = s.b; }
         else { A = [[a, bb], [k * a, k * bb]]; b = [c1, t === "inf" ? k * c1 : k * c1 + pick([1, 2, -1, 3])]; }
-        const D = det2(A);
         return {
           q: <><Tex>{sys(A, b, ["x", "y"])}</Tex> sistema nechta yechimga ega?</>,
           choice: { options: ["Yagona yechim", "Yechimi yo'q", "Cheksiz ko'p yechim"], correct: t === "one" ? 0 : t === "none" ? 1 : 2 },
-          steps: [
-            <><Tex>{`\\Delta = ${tmat(A, "v")} = ${tn(D)}`}</Tex></>,
-            t === "one" ? <><Tex>{"\\Delta\\neq0"}</Tex>, demak yechim yagona (aniq sistema).</> : <><Tex>{"\\Delta=0"}</Tex>: 2-tenglamaning chap tomoni 1-sining chap tomonini <Tex>{tp(k)}</Tex> ga ko'paytirganga teng.</>,
-            t === "none" ? <>O'ng tomonda esa <Tex>{`${tn(b[1])} \\neq ${tp(k)}\\cdot${tp(b[0])} = ${tn(k * b[0])}`}</Tex>. Ziddiyat — yechim yo'q.</> : t === "inf" ? <>O'ng tomon ham <Tex>{tp(k)}</Tex> baravar. Demak ikki tenglama aslida bitta — yechim cheksiz ko'p.</> : <>Yechimni Kramer usulida topish mumkin.</>,
-          ],
+          steps: kindExplain(A, b, t, k),
         };
       },
     },

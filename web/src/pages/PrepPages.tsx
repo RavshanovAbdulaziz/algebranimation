@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { PREP, prepBySlug, prepByN } from "../prep";
-import { genToMCQ, Practice, rich, shuffle, StepReveal, TestItem, TestList, type MCQ } from "../prep/core";
+import { genToMCQ, Practice, rich, shuffle, Solution, TestItem, TestList, TryIt, type MCQ } from "../prep/core";
 import { Tex } from "../components/Tex";
 import { dueIds, record, resetReview, topicStats, useReview } from "../lib/review";
 import { byId } from "../data/topics";
@@ -201,7 +201,8 @@ export function PrepTopicPage() {
               <div className="rule">{rich(r.rule)}</div>
               {r.formula && <div className="formula-box"><Tex block>{r.formula}</Tex></div>}
               {r.visual}
-              <StepReveal steps={r.steps} />
+              <Solution p={r} />
+              {r.gens && <TryIt topic={t.n} gens={t.gens.filter((g) => r.gens!.includes(g.id))} />}
             </div>
           ))}
         </section>
