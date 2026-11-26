@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { PREP, prepBySlug, prepByN } from "../prep";
-import { genToMCQ, Practice, shuffle, StepReveal, TestItem, TestList, type MCQ } from "../prep/core";
+import { genToMCQ, Practice, rich, shuffle, StepReveal, TestItem, TestList, type MCQ } from "../prep/core";
+import { Tex } from "../components/Tex";
 import { dueIds, record, resetReview, topicStats, useReview } from "../lib/review";
 import { byId } from "../data/topics";
 
@@ -61,6 +62,12 @@ export function PrepHub() {
         })}
       </div>
 
+      <section style={{ marginTop: 36 }}>
+        <h2>Umumiy belgilar</h2>
+        <p className="muted small">Hamma mavzularda uchraydi. Har bir mavzu sahifasida o'sha mavzuning o'z belgilari ham tushuntirilgan.</p>
+        <SymbolTable title="" rows={COMMON_SYMBOLS} />
+      </section>
+
       <section className="cheat-all">
         <h2>Hamma formulalar — bitta varaqda</h2>
         <p className="muted small">Imtihondan oldin 3 daqiqada ko'z yugurtirish uchun. <button className="linklike" onClick={() => window.print()}>Chop etish</button></p>
@@ -80,6 +87,42 @@ export function PrepHub() {
           Natijalar faqat shu brauzerda saqlanadi. <button className="linklike" onClick={() => { if (confirm("Barcha natijalar o'chiriladi. Davom etasizmi?")) resetReview(); }}>Natijalarni tozalash</button>
         </p>
       )}
+    </div>
+  );
+}
+
+/* ================================================================== */
+/* Belgilar jadvali                                                    */
+/* ================================================================== */
+
+/** Butun kurs bo'yicha uchraydigan umumiy belgilar */
+const COMMON_SYMBOLS: { s: string; read: string; mean: ReactNode }[] = [
+  { s: "\\Rightarrow", read: "kelib chiqadi", mean: "Chapdagidan o'ngdagi kelib chiqadi (\"demak\")." },
+  { s: "\\Leftrightarrow", read: "teng kuchli", mean: "Ikkala tomon bir vaqtda to'g'ri yoki bir vaqtda noto'g'ri (\"faqat va faqat shunda\")." },
+  { s: "\\neq", read: "teng emas", mean: "Masalan, Δ ≠ 0 — delta noldan farqli." },
+  { s: "a_{ij}", read: "a i j", mean: "Jadvaldagi element: i — satr raqami, j — ustun raqami. a₂₃ — 2-satr, 3-ustun." },
+  { s: "x_1,\\ x_2", read: "x bir, x ikki", mean: "Pastki raqam — nechanchi noma'lum ekanini bildiradi (daraja emas!)." },
+  { s: "x^2", read: "x kvadrat", mean: "Yuqoridagi raqam — daraja." },
+  { s: "\\sum", read: "sigma, yig'indi", mean: "Ketma-ket hadlarni qo'shish: ∑ aᵢ = a₁ + a₂ + …" },
+  { s: "\\cdot", read: "ko'paytirish", mean: "Ko'paytirish belgisi (× o'rniga)." },
+  { s: "(x;\\ y)", read: "koordinatalar", mean: "Nuqta yoki vektor koordinatalari nuqtali vergul bilan ajratiladi." },
+  { s: "\\vec a", read: "a vektor", mean: "Ustidagi strelka — bu vektor (son emas)." },
+  { s: "|\\,\\cdot\\,|", read: "modul", mean: "Son uchun — absolyut qiymat (|−3| = 3); vektor uchun — uzunlik; matritsa uchun — determinant." },
+];
+
+function SymbolTable({ title, rows }: { title: string; rows: { s: string; read: string; mean: ReactNode }[] }) {
+  if (!rows.length) return null;
+  return (
+    <div className="symtab">
+      <div className="symtab-title">{title}</div>
+      <table>
+        <thead><tr><th>Belgi</th><th>O'qilishi</th><th>Ma'nosi</th></tr></thead>
+        <tbody>
+          {rows.map((r, i) => (
+            <tr key={i}><td className="sym"><Tex>{r.s}</Tex></td><td className="read">{r.read}</td><td>{rich(r.mean)}</td></tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }
@@ -137,6 +180,7 @@ export function PrepTopicPage() {
           <h2><span className="pnum">1</span> 1 daqiqada</h2>
           <div className="minute">{t.minute}</div>
           {t.picture}
+          <SymbolTable title="Bu mavzudagi belgilar" rows={t.symbols} />
         </section>
 
         <section id="kerak" className="psec">
@@ -154,7 +198,8 @@ export function PrepTopicPage() {
           {t.recipes.map((r, i) => (
             <div key={i} className="recipe">
               <h3>{String.fromCharCode(65 + i)}. {r.title}</h3>
-              <div className="rule">{r.rule}</div>
+              <div className="rule">{rich(r.rule)}</div>
+              {r.formula && <div className="formula-box"><Tex block>{r.formula}</Tex></div>}
               {r.visual}
               <StepReveal steps={r.steps} />
             </div>
@@ -319,9 +364,9 @@ export function MockExam() {
         {exam.map((m, k) => (
           <details key={k} className={"review-item " + (answers[k] ? "ok" : "no")} open={!answers[k]}>
             <summary>{answers[k] ? "✓" : "✗"} {k + 1}-savol</summary>
-            <div className="quiz-q">{m.q}</div>
-            <div className="small">To'g'ri javob: <b>{"ABCDE"[m.correct]}) </b>{m.options[m.correct]}</div>
-            <div className="quiz-explain">{m.explain}</div>
+            <div className="quiz-q">{rich(m.q)}</div>
+            <div className="small">To'g'ri javob: <b>{"ABCDE"[m.correct]}) </b>{rich(m.options[m.correct])}</div>
+            <div className="quiz-explain">{rich(m.explain)}</div>
           </details>
         ))}
       </div>

@@ -63,16 +63,26 @@ export const T1: PrepTopic = {
       <div className="muted small"><span style={{ color: B }}>■</span> bosh diagonal (+) &nbsp; <span style={{ color: O }}>■</span> yon diagonal (−)</div>
     </div>
   ),
+  symbols: [
+    { s: "|A|,\\ \\det A,\\ \\Delta", read: "A ning determinanti, delta", mean: "Uchalasi ham bitta narsa — determinant. Jadval ikki tik chiziq orasida yoziladi (qavs emas!)." },
+    { s: "\\begin{vmatrix} a&b\\\\c&d \\end{vmatrix}", read: "ikkinchi tartibli determinant", mean: "Tik chiziqlar — \"bu jadvaldan bitta son hisobla\" degani. Qavsli jadval $\\begin{pmatrix}a&b\\\\c&d\\end{pmatrix}$ esa matritsa (son emas)." },
+    { s: "a_{ij}", read: "a i j", mean: "i-satr va j-ustundagi element. $a_{12}$ — 1-satr, 2-ustun; $a_{31}$ — 3-satr, 1-ustun." },
+    { s: "M_{ij}", read: "minor M i j", mean: "i-satr va j-ustunni o'chirgandan keyin qolgan kichik determinant." },
+    { s: "A_{ij}", read: "algebraik to'ldiruvchi", mean: "Minorga ishora qo'yilgani: $A_{ij}=(-1)^{i+j}M_{ij}$." },
+    { s: "(-1)^{i+j}", read: "minus bir daraja i plus j", mean: "Faqat ishorani beradi: $i+j$ juft bo'lsa $+1$, toq bo'lsa $-1$." },
+    { s: "n", read: "en", mean: "Determinant tartibi: $n\\times n$ jadval (2-tartibli — 2×2, 3-tartibli — 3×3)." },
+  ],
   uses: [
     { icon: "⚖️", title: "Sistema yechiladimi?", text: <>Kramer usuli to'liq determinantlardan iborat. <Tex>{"\\Delta \\ne 0"}</Tex> — yagona yechim bor; <Tex>{"\\Delta=0"}</Tex> — yo'q yoki cheksiz ko'p.</> },
     { icon: "🏭", title: "Tarmoqlar balansi (Leontyev)", text: <>Iqtisodiyot tarmoqlari bir-biridan mahsulot oladi: <Tex>{"(E-A)x=y"}</Tex>. Reja tuzish mumkinligi <Tex>{"\\det(E-A)\\neq0"}</Tex> ga bog'liq.</> },
     { icon: "📊", title: "Ekonometrika", text: <>Regressiyada omillar bir-birini takrorlasa (multikollinearlik), determinant 0 ga yaqinlashadi va model "sinadi".</> },
-    { icon: "📐", title: "Yuza", text: <>Uchlari berilgan uchburchak yuzasi = ½·|determinant|. Kompyuter grafikasida shakl necha marta kattalashishini ham determinant beradi.</> },
+    { icon: "📐", title: "Yuza", text: <>Uchlari berilgan uchburchak yuzasi determinant modulining yarmiga teng: <Tex>{"S=\\frac12|\\Delta|"}</Tex>. Kompyuter grafikasida shakl necha marta kattalashishini ham determinant beradi.</> },
   ],
   recipes: [
     {
       title: "2-tartibli determinant",
-      rule: <>Bosh diagonal ko'paytmasidan yon diagonal ko'paytmasini <b>ayiramiz</b>: <Tex>{`\\begin{vmatrix} ${c(B, "a")} & ${c(O, "b")} \\\\ ${c(O, "c")} & ${c(B, "d")} \\end{vmatrix} = ${c(B, "ad")} - ${c(O, "bc")}`}</Tex></>,
+      rule: <><span style={{ color: B }}>Bosh diagonal</span> (chap-yuqoridan o'ng-pastga) ko'paytmasidan <span style={{ color: O }}>yon diagonal</span> ko'paytmasini <b>ayiramiz</b>.</>,
+      formula: `\\begin{vmatrix} ${c(B, "a")} & ${c(O, "b")} \\\\ ${c(O, "c")} & ${c(B, "d")} \\end{vmatrix} = ${c(B, "a\\cdot d")} - ${c(O, "b\\cdot c")}`,
       steps: [
         <>Misol: <Tex>{`\\begin{vmatrix} ${c(B, 5)} & ${c(O, 2)} \\\\ ${c(O, -3)} & ${c(B, 4)} \\end{vmatrix}`}</Tex></>,
         <>Bosh diagonal: <Tex>{`${c(B, "5\\cdot 4")} = 20`}</Tex></>,
@@ -82,7 +92,8 @@ export const T1: PrepTopic = {
     },
     {
       title: "3-tartibli determinant — Sarrus (uchburchak) qoidasi",
-      rule: <>Uchta <span style={{ color: B }}>"+"</span> diagonal (chap-yuqoridan o'ng-pastga) ko'paytmalari yig'indisidan uchta <span style={{ color: O }}>"−"</span> diagonal (o'ng-yuqoridan chap-pastga) ko'paytmalari yig'indisini ayiramiz. Oson usul: 1- va 2-ustunni o'ngga qayta yozib, diagonallarni chizing.</>,
+      rule: <>Bosh diagonalga parallel uchta "uchburchak" ko'paytma <b>plyus</b> ishora bilan, yon diagonalga parallel uchtasi <b>minus</b> ishora bilan olinadi. Daftarda oson usul: 1- va 2-ustunni jadvalning o'ng tomoniga qayta yozing — shunda 3 ta "+" diagonal (chapdan o'ngga pastga) va 3 ta "−" diagonal (o'ngdan chapga pastga) to'g'ri chiziq bo'lib chiqadi.</>,
+      formula: "\\Delta = (a_{11}a_{22}a_{33} + a_{12}a_{23}a_{31} + a_{13}a_{21}a_{32}) - (a_{13}a_{22}a_{31} + a_{11}a_{23}a_{32} + a_{12}a_{21}a_{33})",
       visual: (
         <Tex block>{`\\left|\\begin{matrix} ${c(B, "a_{11}")} & a_{12} & ${c(O, "a_{13}")} \\\\ a_{21} & ${c("#c084fc", "a_{22}")} & a_{23} \\\\ ${c(O, "a_{31}")} & a_{32} & ${c(B, "a_{33}")} \\end{matrix}\\right| \\begin{matrix} a_{11} & a_{12} \\\\ a_{21} & a_{22} \\\\ a_{31} & a_{32} \\end{matrix}`}</Tex>
       ),
@@ -90,7 +101,8 @@ export const T1: PrepTopic = {
     },
     {
       title: "Minor va algebraik to'ldiruvchi",
-      rule: <><Tex>{"M_{ij}"}</Tex> (minor) — <b>i-satr va j-ustunni o'chirib</b>, qolgan determinant. Algebraik to'ldiruvchi: <Tex>{"A_{ij} = (-1)^{i+j}M_{ij}"}</Tex>. Ishoralar shaxmat kabi: <Tex>{"\\begin{smallmatrix} + & - & + \\\\ - & + & - \\\\ + & - & + \\end{smallmatrix}"}</Tex></>,
+      rule: <><b>Minor</b> <Tex>{"M_{ij}"}</Tex> — i-satr va j-ustunni ruchka bilan o'chirib, qolgan kichik determinant. <b>Algebraik to'ldiruvchi</b> <Tex>{"A_{ij}"}</Tex> — shu minorning o'zi, faqat ishorasi shaxmat taxtasidagidek: <Tex>{"\\begin{matrix} + & - & + \\\\ - & + & - \\\\ + & - & + \\end{matrix}"}</Tex></>,
+      formula: "A_{ij} = (-1)^{i+j}\\cdot M_{ij}",
       steps: [
         <>Yuqoridagi matritsa uchun <Tex>{"A_{12}"}</Tex> ni topamiz: <Tex>{`${tmat(EX3, "v")}`}</Tex></>,
         <>1-satr va 2-ustunni o'chiramiz, qoladi: <Tex>{`M_{12} = ${tmat(minor(EX3, 0, 1), "v")} = 0\\cdot1 - 4\\cdot1 = -4`}</Tex></>,
@@ -100,7 +112,8 @@ export const T1: PrepTopic = {
     },
     {
       title: "Laplas teoremasi (satr yoki ustun bo'yicha yoyish) — 4×4 uchun ham",
-      rule: <>Determinant = tanlangan satr elementlarini o'z <b>algebraik to'ldiruvchilariga</b> ko'paytirib qo'shish: <Tex>{"\\Delta = a_{i1}A_{i1} + a_{i2}A_{i2} + \\dots"}</Tex>. <b>Eng ko'p nol bor</b> satr/ustunni tanlang — nol hadlar hisoblanmaydi.</>,
+      rule: <>Biror satrni (yoki ustunni) tanlaymiz. Uning har bir elementini o'zining <b>algebraik to'ldiruvchisiga</b> ko'paytirib, hammasini qo'shamiz. <b>Eng ko'p nol bor</b> satrni tanlang — nolga ko'paytiriladigan hadlarni hisoblash shart emas.</>,
+      formula: "\\Delta = a_{i1}A_{i1} + a_{i2}A_{i2} + \\dots + a_{in}A_{in}",
       steps: [
         <>Misol: <Tex>{`${tmat([[2, 1, 3], [0, -1, 4], [0, 2, 1]], "v")}`}</Tex> — 1-ustunda ikkita nol bor, shuni tanlaymiz.</>,
         <><Tex>{"\\Delta = 2\\cdot A_{11} + 0\\cdot A_{21} + 0\\cdot A_{31} = 2\\cdot A_{11}"}</Tex></>,
@@ -111,17 +124,17 @@ export const T1: PrepTopic = {
     },
     {
       title: "Determinantli tenglama",
-      rule: <>Determinantni odatdagidek ochamiz — oddiy tenglama hosil bo'ladi, uni yechamiz.</>,
+      rule: <>Determinantni odatdagidek ochamiz. Natijada oddiy (chiziqli yoki kvadrat) tenglama hosil bo'ladi, uni yechamiz.</>,
       steps: [
         <>Misol: <Tex>{`${tmat([["x", 1], [6, "x+1"]], "v")} = 0`}</Tex></>,
         <>Ochamiz: <Tex>{"x(x+1) - 1\\cdot 6 = 0"}</Tex></>,
         <><Tex>{"x^2 + x - 6 = 0"}</Tex> — kvadrat tenglama.</>,
-        <>Viyet yoki diskriminant: <Tex>{"x_1 = 2,\\quad x_2 = -3"}</Tex></>,
+        <>Viyet teoremasi yoki diskriminant orqali: <Tex>{"x_1 = 2,\\quad x_2 = -3"}</Tex></>,
       ],
     },
   ],
   mistakes: [
-    { wrong: <><Tex>{"ad + bc"}</Tex></>, right: <><Tex>{"ad - bc"}</Tex> — yon diagonal har doim <b>ayiriladi</b>.</> },
+    { wrong: <><Tex>{"a\\cdot d + b\\cdot c"}</Tex></>, right: <><Tex>{"a\\cdot d - b\\cdot c"}</Tex>: yon diagonal har doim <b>ayiriladi</b>.</> },
     { wrong: <><Tex>{"20 - (-2)\\cdot3 = 20 - 6"}</Tex></>, right: <><Tex>{"20 - (-6) = 26"}</Tex>. Manfiy ko'paytmani qavsga oling.</> },
     { wrong: <><Tex>{"a_{12}"}</Tex> — "1-ustun, 2-satr"</>, right: <>Birinchi indeks — <b>satr</b>, ikkinchisi — <b>ustun</b>: <Tex>{"a_{12}"}</Tex> — 1-satr, 2-ustun.</> },
     { wrong: <><Tex>{"A_{ij} = M_{ij}"}</Tex> (ishora unutilgan)</>, right: <><Tex>{"A_{ij} = (-1)^{i+j}M_{ij}"}</Tex>. <Tex>{"i+j"}</Tex> toq bo'lsa ishora almashadi.</> },
@@ -140,7 +153,7 @@ export const T1: PrepTopic = {
           ans: [{ v: det2(m) }],
           traps: [
             { v: [a * d + b * cc], why: "Yon diagonal ko'paytmasini qo'shib yubordingiz — uni ayirish kerak." },
-            { v: [b * cc - a * d], why: "Tartib teskari: avval bosh diagonal (a·d), keyin yon diagonal ayiriladi." },
+            { v: [b * cc - a * d], why: "Tartib teskari: avval bosh diagonal $a\\cdot d$, undan yon diagonal $b\\cdot c$ ayiriladi." },
           ],
           steps: [
             <>Bosh diagonal: <Tex>{`${tp(a)}\\cdot${tp(d)} = ${tn(a * d)}`}</Tex></>,
@@ -227,7 +240,7 @@ export const T1: PrepTopic = {
         return {
           q: <>Tenglamani yeching: <Tex>{`${tmat(m, "v")} = ${tn(R2)}`}</Tex></>,
           ans: [{ label: <Tex>x</Tex>, v: (R2 + B2 * C2) / a }],
-          traps: [{ v: [(R2 - B2 * C2) / a], why: "Yon diagonalni o'tkazganda ishora: a·x − b·c = r ⇒ a·x = r + b·c." }],
+          traps: [{ v: [(R2 - B2 * C2) / a], why: "Ishorada xato: $a\\cdot x - b\\cdot c = r$ dan $a\\cdot x = r + b\\cdot c$ chiqadi (o'ng tomonga o'tganda minus plyusga aylanadi)." }],
           steps: [
             <>Ochamiz: <Tex>{`${tp(a)}\\cdot x - ${tp(B2)}\\cdot${tp(C2 as number)} = ${tn(R2)}`}</Tex></>,
             <><Tex>{`${tn(a)}x ${B2 * C2 >= 0 ? "-" : "+"} ${tn(Math.abs(B2 * C2))} = ${tn(R2)}`}</Tex></>,
@@ -260,21 +273,21 @@ export const T1: PrepTopic = {
   tests: [
     { id: "t1:test:1", q: "Determinantning ikki satri o'rni almashtirilsa, uning qiymati qanday o'zgaradi?", options: ["O'zgarmaydi", "Ishorasi qarama-qarshisiga o'zgaradi", "2 marta ortadi", "Nolga teng bo'ladi", "Kvadratga oshadi"], correct: 1, explain: "Ikki satr (yoki ustun) almashsa — determinant ishorasini o'zgartiradi, moduli o'sha qoladi." },
     { id: "t1:test:2", q: "Determinantning ikki satri teng (yoki proporsional) bo'lsa, determinant…", options: ["1 ga teng", "satrlar yig'indisiga teng", "0 ga teng", "manfiy bo'ladi", "aniqlanmagan"], correct: 2, explain: "Proporsional satrlar — 'takrorlanish'. Bunday determinant doim 0." },
-    { id: "t1:test:3", q: <>Agar determinantning bitta satri barcha elementlari 0 bo'lsa, determinant…</>, options: ["0 ga teng", "1 ga teng", "diagonal ko'paytmasiga teng", "aniqlanmagan", "−1 ga teng"], correct: 0, explain: "Shu satr bo'yicha Laplas yoyilmasida hamma hadlar 0 ga ko'paytiriladi." },
-    { id: "t1:test:4", q: <>Transponirlangan matritsaning determinanti <Tex>{"|A^T|"}</Tex> …</>, options: [<Tex>{"-|A|"}</Tex>, <Tex>{"|A|^2"}</Tex>, <Tex>{"|A|"}</Tex>, "0", <Tex>{"1/|A|"}</Tex>], correct: 2, explain: "Satrlarni ustun qilib yozish determinantni o'zgartirmaydi: |Aᵀ| = |A|." },
-    { id: "t1:test:5", q: "Determinantning bitta satri k soniga ko'paytirilsa, determinant…", options: ["o'zgarmaydi", "k² marta ortadi", "k marta ortadi", "k ga qo'shiladi", "ishorasi o'zgaradi"], correct: 2, explain: "Bitta satrdagi umumiy ko'paytuvchi determinant belgisi oldiga chiqariladi." },
-    { id: "t1:test:6", q: <>2×2 matritsa uchun <Tex>{"|3A|"}</Tex> = ?</>, options: [<Tex>{"3|A|"}</Tex>, <Tex>{"9|A|"}</Tex>, <Tex>{"6|A|"}</Tex>, <Tex>{"|A|"}</Tex>, <Tex>{"27|A|"}</Tex>], correct: 1, explain: "3A da HAR IKKI satr 3 ga ko'paytirilgan: 3·3 = 9. Umuman, n×n uchun |kA| = kⁿ|A|." },
-    { id: "t1:test:7", q: <>Algebraik to'ldiruvchi <Tex>{"A_{ij}"}</Tex> qanday topiladi?</>, options: [<Tex>{"A_{ij} = M_{ij}"}</Tex>, <Tex>{"A_{ij} = -M_{ij}"}</Tex>, <Tex>{"A_{ij} = (-1)^{i+j}M_{ij}"}</Tex>, <Tex>{"A_{ij} = (-1)^{i\\cdot j}M_{ij}"}</Tex>, <Tex>{"A_{ij} = a_{ij}M_{ij}"}</Tex>], correct: 2, explain: "Minorga shaxmat ishorasi qo'yiladi: (−1)^(i+j)." },
-    { id: "t1:test:8", q: "Laplas teoremasi bo'yicha determinant nimaga teng?", options: ["Diagonal elementlar yig'indisiga", "Biror satr elementlarining o'z algebraik to'ldiruvchilariga ko'paytmalari yig'indisiga", "Barcha minorlar yig'indisiga", "Barcha elementlar ko'paytmasiga", "Birinchi satr elementlari yig'indisiga"], correct: 1, explain: "Δ = aᵢ₁Aᵢ₁ + aᵢ₂Aᵢ₂ + … + aᵢₙAᵢₙ (ixtiyoriy i-satr yoki ustun bo'yicha)." },
-    { id: "t1:test:9", q: <>Hisoblang: <Tex>{tmat([[1, 3, 2], [2, 2, 4], [3, 1, 6]], "v")}</Tex></>, options: ["1", "0", "−2", "4", "12"], correct: 1, explain: <>3-ustun = 2 × 1-ustun (2,4,6 = 2·(1,2,3)) — proporsional ustunlar, demak 0. Hisoblamasdan ham ko'rish mumkin!</> },
-    { id: "t1:test:10", q: "Determinant qanday matritsa uchun aniqlangan?", options: ["Har qanday matritsa uchun", "Faqat kvadrat matritsa uchun", "Faqat 2×2 va 3×3 uchun", "Faqat simmetrik matritsa uchun", "Faqat nolmas matritsa uchun"], correct: 1, explain: "Satrlar soni = ustunlar soni bo'lishi shart." },
+    { id: "t1:test:3", q: <>Agar determinantning bitta satri barcha elementlari 0 bo'lsa, determinant…</>, options: ["0 ga teng", "1 ga teng", "diagonal ko'paytmasiga teng", "aniqlanmagan", "$-1$ ga teng"], correct: 0, explain: "Shu satr bo'yicha Laplas yoyilmasida hamma hadlar 0 ga ko'paytiriladi." },
+    { id: "t1:test:4", q: <>Transponirlangan matritsaning determinanti <Tex>{"|A^T|"}</Tex> …</>, options: [<Tex>{"-|A|"}</Tex>, <Tex>{"|A|^2"}</Tex>, <Tex>{"|A|"}</Tex>, "0", <Tex>{"\\dfrac{1}{|A|}"}</Tex>], correct: 2, explain: "Satrlarni ustun qilib yozish (transponirlash) determinantni o'zgartirmaydi: $|A^T| = |A|$. ($A^T$ — \"A transponirlangan\", T — daraja emas, belgi.)" },
+    { id: "t1:test:5", q: "Determinantning bitta satri k soniga ko'paytirilsa, determinant…", options: ["o'zgarmaydi", "$k^2$ marta ortadi", "$k$ marta ortadi", "$k$ ga qo'shiladi", "ishorasi o'zgaradi"], correct: 2, explain: "Bitta satrdagi umumiy ko'paytuvchi determinant belgisi oldiga chiqariladi." },
+    { id: "t1:test:6", q: <>2×2 matritsa uchun <Tex>{"|3A|"}</Tex> = ?</>, options: [<Tex>{"3|A|"}</Tex>, <Tex>{"9|A|"}</Tex>, <Tex>{"6|A|"}</Tex>, <Tex>{"|A|"}</Tex>, <Tex>{"27|A|"}</Tex>], correct: 1, explain: "$3A$ da HAR IKKI satr 3 ga ko'paytirilgan, har biridan 3 tashqariga chiqadi: $3\\cdot3=9$. Umuman, $n\\times n$ jadval uchun $|kA| = k^n\\cdot|A|$." },
+    { id: "t1:test:7", q: <>Algebraik to'ldiruvchi <Tex>{"A_{ij}"}</Tex> qanday topiladi?</>, options: [<Tex>{"A_{ij} = M_{ij}"}</Tex>, <Tex>{"A_{ij} = -M_{ij}"}</Tex>, <Tex>{"A_{ij} = (-1)^{i+j}M_{ij}"}</Tex>, <Tex>{"A_{ij} = (-1)^{i\\cdot j}M_{ij}"}</Tex>, <Tex>{"A_{ij} = a_{ij}M_{ij}"}</Tex>], correct: 2, explain: "Minorga shaxmat ishorasi qo'yiladi: $A_{ij}=(-1)^{i+j}\\cdot M_{ij}$." },
+    { id: "t1:test:8", q: "Laplas teoremasi bo'yicha determinant nimaga teng?", options: ["Diagonal elementlar yig'indisiga", "Biror satr elementlarining o'z algebraik to'ldiruvchilariga ko'paytmalari yig'indisiga", "Barcha minorlar yig'indisiga", "Barcha elementlar ko'paytmasiga", "Birinchi satr elementlari yig'indisiga"], correct: 1, explain: "$\\Delta = a_{i1}A_{i1} + a_{i2}A_{i2} + \\dots + a_{in}A_{in}$ — ixtiyoriy i-satr (yoki ustun) bo'yicha." },
+    { id: "t1:test:9", q: <>Hisoblang: <Tex>{tmat([[1, 3, 2], [2, 2, 4], [3, 1, 6]], "v")}</Tex></>, options: ["1", "0", "$-2$", "4", "12"], correct: 1, explain: <>3-ustun 1-ustunning 2 baravari: <Tex>{"\\begin{pmatrix}2\\\\4\\\\6\\end{pmatrix}=2\\cdot\\begin{pmatrix}1\\\\2\\\\3\\end{pmatrix}"}</Tex>. Proporsional ustunlar bor, demak determinant 0. Buni hisoblamasdan ham ko'rish mumkin!</> },
+    { id: "t1:test:10", q: "Determinant qanday matritsa uchun aniqlangan?", options: ["Har qanday matritsa uchun", "Faqat kvadrat matritsa uchun", "Faqat 2×2 va 3×3 uchun", "Faqat simmetrik matritsa uchun", "Faqat nolmas matritsa uchun"], correct: 1, explain: "Satrlar soni ustunlar soniga teng bo'lishi shart." },
   ],
   cheat: [
     { t: "2×2", f: <Tex>{"\\begin{vmatrix} a&b\\\\c&d\\end{vmatrix}=ad-bc"}</Tex> },
     { t: "3×3 (Sarrus)", f: <Tex>{"(a_{11}a_{22}a_{33}+a_{12}a_{23}a_{31}+a_{13}a_{21}a_{32}) - (a_{13}a_{22}a_{31}+a_{11}a_{23}a_{32}+a_{12}a_{21}a_{33})"}</Tex> },
     { t: "Algebraik to'ldiruvchi", f: <Tex>{"A_{ij}=(-1)^{i+j}M_{ij}"}</Tex> },
-    { t: "Laplas", f: <Tex>{"\\Delta=\\sum_j a_{ij}A_{ij}"}</Tex> },
-    { t: "Xossalar", f: <>Satrlar almashsa — ishora o'zgaradi · Nol satr / teng satrlar → 0 · <Tex>{"|A^T|=|A|"}</Tex> · Satrga boshqa satrni k marta qo'shsak — o'zgarmaydi · Uchburchak → diagonal ko'paytmasi</> },
+    { t: "Laplas", f: <Tex>{"\\Delta=a_{i1}A_{i1}+a_{i2}A_{i2}+\\dots+a_{in}A_{in}"}</Tex> },
+    { t: "Xossalar", f: <ul className="compact"><li>Ikki satr almashsa — ishora o'zgaradi</li><li>Nol satr yoki teng (proporsional) satrlar bo'lsa — determinant 0</li><li><Tex>{"|A^T|=|A|"}</Tex></li><li>Satrga boshqa satrni biror songa ko'paytirib qo'shsak — o'zgarmaydi</li><li>Uchburchak ko'rinishda — diagonal elementlar ko'paytmasi</li></ul> },
     { t: "Ko'paytuvchi", f: <Tex>{"|kA| = k^n|A|,\\quad |AB|=|A|\\cdot|B|"}</Tex> },
   ],
   lessons: ["determinant", "det3"],

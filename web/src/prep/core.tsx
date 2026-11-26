@@ -42,6 +42,8 @@ export interface Recipe {
   title: string;
   /** Qisqa qoida (1–2 gap) */
   rule: ReactNode;
+  /** Asosiy formula — alohida qatorda, yirik (daftardagidek) */
+  formula?: string;
   /** Ishlangan misol qadamlari */
   steps: ReactNode[];
   /** Ixtiyoriy rasm/sxema (qoida yonida) */
@@ -55,6 +57,8 @@ export interface PrepTopic {
   short: string;
   /** "1 daqiqada" — oddiy tilda mohiyat */
   minute: ReactNode;
+  /** Mavzudagi belgilar: belgi (TeX), qanday o'qiladi, nimani bildiradi */
+  symbols: { s: string; read: string; mean: ReactNode }[];
   /** Mohiyatni ko'rsatadigan bitta rasm (ixtiyoriy) */
   picture?: ReactNode;
   uses: { icon: string; title: string; text: ReactNode }[];
@@ -131,6 +135,15 @@ export function parseNum(s: string): number | null {
 }
 
 export const eq = (a: number, b: number, tol = 1e-6) => Math.abs(a - b) <= tol;
+
+/**
+ * Matn + formula: "Uzunlik $\\sqrt{x^2+y^2}$ ga teng" → oddiy matn va KaTeX formula.
+ * Testlar, izohlar va xato sabablari shu orqali chiqadi — formulalar daftardagidek ko'rinadi.
+ */
+export function rich(node: ReactNode): ReactNode {
+  if (typeof node !== "string" || !node.includes("$")) return node;
+  return node.split("$").map((part, i) => (i % 2 ? <Tex key={i}>{part}</Tex> : part));
+}
 
 /** 2×2 va 3×3 determinantlar */
 export const det2 = (m: number[][]) => m[0][0] * m[1][1] - m[0][1] * m[1][0];
@@ -235,7 +248,7 @@ export function Practice({ topic, gens }: { topic: number; gens: Gen[] }) {
             {p.choice.options.map((o, i) => {
               const cls = !res ? (picked === i ? " sel" : "") : i === p.choice!.correct ? " right" : i === picked ? " wrong" : " dim";
               return (
-                <button key={i} className={"quiz-opt" + cls} disabled={!!res} onClick={() => setPicked(i)}>{o}</button>
+                <button key={i} className={"quiz-opt" + cls} disabled={!!res} onClick={() => setPicked(i)}>{rich(o)}</button>
               );
             })}
           </div>
@@ -258,7 +271,7 @@ export function Practice({ topic, gens }: { topic: number; gens: Gen[] }) {
             <button type="submit" hidden />
           </form>
         )}
-        {!p.choice && !res && <div className="muted small">Kasr bo'lsa: <code>3/4</code> yoki <code>-1.5</code> ko'rinishida yozing. Enter — tekshirish.</div>}
+        {!p.choice && !res && <div className="muted small">Javob kasr bo'lsa, klaviaturada <code>3/4</code> deb yozing (bu <Tex>{"\\frac34"}</Tex> degani) yoki o'nli kasr: <code>-1.5</code>. Enter — tekshirish.</div>}
 
         <div className="practice-ctl">
           {!res ? (
@@ -279,8 +292,8 @@ export function Practice({ topic, gens }: { topic: number; gens: Gen[] }) {
             ) : (
               <>
                 <b>Xato.</b>{" "}
-                {p.ans && <>To'g'ri javob: <b>{p.ans.map((a) => num(a.v)).join("; ")}</b>. </>}
-                {res.trap && <span className="trap">⚠ {res.trap}</span>}
+                {p.ans && <>To'g'ri javob: <Tex>{p.ans.map((a) => tn(a.v)).join(";\\quad ")}</Tex>. </>}
+                {res.trap && <span className="trap">⚠ {rich(res.trap)}</span>}
               </>
             )}
           </div>
@@ -324,7 +337,7 @@ export function TestItem({ m, n, onAnswer, noRecord, initial = null }: { m: MCQ;
   const letters = "ABCDE";
   return (
     <div className="quiz-item">
-      <div className="quiz-q">{n !== undefined && <b>{n}. </b>}{m.q}</div>
+      <div className="quiz-q">{n !== undefined && <b>{n}. </b>}{rich(m.q)}</div>
       <div className="quiz-opts col">
         {m.options.map((o, i) => {
           const cls = !answered ? "" : i === m.correct ? " right" : i === picked ? " wrong" : " dim";
@@ -335,7 +348,7 @@ export function TestItem({ m, n, onAnswer, noRecord, initial = null }: { m: MCQ;
               if (!noRecord) record(m.id, ok);
               onAnswer?.(ok, i);
             }}>
-              <span className="opt-l">{letters[i]})</span> {o}
+              <span className="opt-l">{letters[i]})</span> {rich(o)}
             </button>
           );
         })}
@@ -343,7 +356,7 @@ export function TestItem({ m, n, onAnswer, noRecord, initial = null }: { m: MCQ;
       {answered && (
         <div className={"quiz-explain " + (picked === m.correct ? "ok" : "no")}>
           {picked === m.correct ? "To'g'ri! " : "Xato. "}
-          {m.explain}
+          {rich(m.explain)}
         </div>
       )}
     </div>

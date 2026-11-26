@@ -426,3 +426,17 @@ details.links[open] > summary { margin-bottom: 8px; }
   body, .cheat-card { background: #fff !important; color: #000 !important; }
   .cheat-t { color: #000; }
 }
+
+/* --- belgilar jadvali va formula bloki (daftardagidek) --- */
+.formula-box { background: #0b0d11; border: 1px solid rgba(255,209,102,.35); border-radius: 10px; padding: 6px 14px; margin: 0 0 14px; overflow-x: auto; font-size: 1.15rem; }
+.formula-box .katex-display { margin: .5em 0; }
+.symtab { margin: 18px 0 4px; background: var(--bg2); border: 1px solid var(--line); border-radius: var(--radius); overflow-x: auto; }
+.symtab-title { font-weight: 700; padding: 10px 14px 0; }
+.symtab table { width: 100%; border-collapse: collapse; min-width: 520px; }
+.symtab th, .symtab td { text-align: left; padding: 9px 14px; border-bottom: 1px solid var(--line); vertical-align: middle; font-size: .95rem; }
+.symtab th { color: var(--muted); font-weight: 600; font-size: .82rem; text-transform: uppercase; letter-spacing: .03em; }
+.symtab tr:last-child td { border-bottom: 0; }
+.symtab td.sym { font-size: 1.15rem; white-space: nowrap; width: 1%; }
+.symtab td.read { color: #ffd166; white-space: nowrap; width: 1%; }
+.steprev li .katex, .rule .katex, .quiz-q .katex, .quiz-opt .katex, .quiz-explain .katex, .verdict .katex, .mistake .katex { font-size: 1.08em; }
+@media (max-width: 600px) { .symtab td.read { white-space: normal; } }

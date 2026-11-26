@@ -49,16 +49,36 @@ export const T3: PrepTopic = {
   short: "Birgalikda/aniq/aniqmas, Kramer usuli, matritsa usuli, Gauss usuli, Kroneker–Kapelli",
   minute: (
     <>
-      <p><b>Sistema — bir vaqtda bajarilishi kerak bo'lgan bir nechta tenglama.</b> Chiziqli — noma'lumlar faqat 1-darajada (<Tex>{"x^2"}</Tex>, <Tex>{"1/x"}</Tex>, <Tex>{"xy"}</Tex> yo'q).</p>
-      <p>Uchta natija bo'lishi mumkin: <b>yagona yechim</b> (aniq sistema), <b>cheksiz ko'p yechim</b> (aniqmas), <b>yechim yo'q</b> (birgalikda emas). Yechimi bor bo'lsa — "birgalikda".</p>
-      <p>Uchta usul o'rganiladi — hammasi bir xil javob beradi:</p>
+      <p><b>Sistema — bir vaqtda bajarilishi kerak bo'lgan bir nechta tenglama.</b> Masalan:</p>
+      <Tex block>{"\\begin{cases} 2x + y = 3 \\\\ x - 2y = -1 \\end{cases}"}</Tex>
+      <p>Chiziqli degani — noma'lumlar faqat birinchi darajada: <Tex>{"x^2"}</Tex>, <Tex>{"\\dfrac{1}{x}"}</Tex>, <Tex>{"x\\cdot y"}</Tex> kabi hadlar yo'q.</p>
+      <p>Javob uch xil bo'lishi mumkin:</p>
       <ul className="compact">
-        <li><b>Kramer</b> — determinantlar bilan: <Tex>{"x=\\Delta_x/\\Delta"}</Tex>. 2–3 noma'lumda eng tez.</li>
-        <li><b>Matritsa usuli</b> — <Tex>{"X=A^{-1}B"}</Tex>.</li>
-        <li><b>Gauss</b> — noma'lumlarni ketma-ket yo'qotish. Har qanday sistemaga ishlaydi.</li>
+        <li><b>yagona yechim</b> — sistema <i>aniq</i>;</li>
+        <li><b>cheksiz ko'p yechim</b> — sistema <i>aniqmas</i>;</li>
+        <li><b>yechim yo'q</b> — sistema <i>birgalikda emas</i>.</li>
+      </ul>
+      <p>Kamida bitta yechimi bo'lsa, sistema <b>birgalikda</b> deyiladi.</p>
+      <p>Yechishning uchta usuli bor, hammasi bir xil javob beradi:</p>
+      <ul className="compact">
+        <li><b>Kramer usuli</b> — determinantlar orqali. 2–3 ta noma'lumda eng tez.</li>
+        <li><b>Matritsa usuli</b> — teskari matritsa orqali.</li>
+        <li><b>Gauss usuli</b> — noma'lumlarni birin-ketin yo'qotib borish. Har qanday sistemaga ishlaydi.</li>
       </ul>
     </>
   ),
+  symbols: [
+    { s: "\\begin{cases} \\dots \\\\ \\dots \\end{cases}", read: "figurali qavs", mean: "Qavs ichidagi tenglamalar bir vaqtda bajarilishi kerak (sistema)." },
+    { s: "x_1,\\ x_2,\\ x_3", read: "x bir, x ikki, x uch", mean: "Noma'lumlar (x, y, z o'rniga). Pastki raqam — tartib raqami." },
+    { s: "\\Delta", read: "delta", mean: "Asosiy determinant — noma'lumlar oldidagi sonlardan (koeffitsiyentlardan) tuzilgan." },
+    { s: "\\Delta_x,\\ \\Delta_1", read: "delta iks, delta bir", mean: "x ning ustuni o'rniga o'ng tomondagi sonlar (ozod hadlar) qo'yilgan determinant." },
+    { s: "A", read: "A matritsa", mean: "Koeffitsiyentlar jadvali." },
+    { s: "X,\\ B", read: "iks, be", mean: "X — noma'lumlar ustuni, B — ozod hadlar ustuni. Sistema qisqacha: $AX = B$." },
+    { s: "A^{-1}", read: "A teskari", mean: "A ga teskari matritsa ($-1$ daraja emas, belgi!). $A\\cdot A^{-1} = E$." },
+    { s: "(A\\,|\\,B)", read: "kengaytirilgan matritsa", mean: "A ning o'ng tomoniga ozod hadlar ustuni yozilgan jadval (Gauss usulida)." },
+    { s: "R_2 - 2R_1", read: "R ikki minus ikki R bir", mean: "Gauss usulidagi satr amali: 2-satrdan 1-satrning 2 baravarini ayiramiz. R — satr (inglizcha row)." },
+    { s: "\\operatorname{rang} A", read: "A ning rangi", mean: "Jadvalda nechta \"haqiqiy\", bir-birini takrorlamaydigan satr borligi." },
+  ],
   uses: [
     { icon: "⚖️", title: "Bozor muvozanati", text: <>Talab <Tex>{"Q=100-2P"}</Tex>, taklif <Tex>{"Q=20+2P"}</Tex>. Muvozanat — ikkalasi teng bo'lgan nuqta: 2 noma'lumli sistema (P = 20, Q = 60).</> },
     { icon: "🏭", title: "Ishlab chiqarish rejasi", text: <>Har bir mahsulot qancha xom ashyo, mehnat, vaqt talab qilishi ma'lum — resurslarni to'liq ishlatadigan reja sistemadan topiladi.</> },
@@ -68,12 +88,14 @@ export const T3: PrepTopic = {
   recipes: [
     {
       title: "Kramer usuli (2 noma'lum)",
-      rule: <><Tex>{"\\Delta"}</Tex> — koeffitsiyentlar determinanti. <Tex>{"\\Delta_x"}</Tex> — x ustuni o'rniga ozod hadlar qo'yilgan determinant. <Tex>{"x=\\Delta_x/\\Delta,\\ y=\\Delta_y/\\Delta"}</Tex>. Faqat <Tex>{"\\Delta\\neq0"}</Tex> bo'lsa ishlaydi.</>,
+      rule: <>Uchta determinant hisoblanadi: <Tex>{"\\Delta"}</Tex> (delta) — noma'lumlar oldidagi sonlardan; <Tex>{"\\Delta_x"}</Tex> — x ning ustuni o'rniga o'ng tomondagi sonlar qo'yiladi; <Tex>{"\\Delta_y"}</Tex> — y ning ustuni o'rniga. Keyin bo'lamiz. Faqat <Tex>{"\\Delta\\neq0"}</Tex> (delta noldan farqli) bo'lsa ishlaydi.</>,
+      formula: "x = \\frac{\\Delta_x}{\\Delta}, \\qquad y = \\frac{\\Delta_y}{\\Delta}",
       steps: [<>Misol: <Tex>{sys(EXA, EXB, ["x", "y"])}</Tex></>, ...kramer2Steps(EXA, EXB), <>Tekshiruv: <Tex>{"2\\cdot1+1 = 3 ✓,\\ 1-2\\cdot1=-1 ✓"}</Tex></>],
     },
     {
       title: "Kramer usuli (3 noma'lum)",
-      rule: <>Xuddi shunday, faqat 3×3 determinantlar (Sarrus): <Tex>{"x=\\frac{\\Delta_x}{\\Delta},\\ y=\\frac{\\Delta_y}{\\Delta},\\ z=\\frac{\\Delta_z}{\\Delta}"}</Tex></>,
+      rule: <>Xuddi shunday, faqat endi to'rtta 3-tartibli determinant (Sarrus qoidasi bilan) hisoblanadi.</>,
+      formula: "x = \\frac{\\Delta_x}{\\Delta}, \\qquad y = \\frac{\\Delta_y}{\\Delta}, \\qquad z = \\frac{\\Delta_z}{\\Delta}",
       steps: [
         <>Misol: <Tex>{sys([[1, 1, 1], [1, -1, 1], [2, 1, -1]], [6, 2, 1], ["x", "y", "z"])}</Tex></>,
         <><Tex>{`\\Delta = ${tmat([[1, 1, 1], [1, -1, 1], [2, 1, -1]], "v")} = ${det3([[1, 1, 1], [1, -1, 1], [2, 1, -1]])}`}</Tex></>,
@@ -84,7 +106,8 @@ export const T3: PrepTopic = {
     },
     {
       title: "Matritsa usuli",
-      rule: <>Sistemani <Tex>{"AX=B"}</Tex> ko'rinishda yozamiz va ikki tomonni chapdan <Tex>{"A^{-1}"}</Tex> ga ko'paytiramiz: <Tex>{"X=A^{-1}B"}</Tex>.</>,
+      rule: <>Sistemani qisqacha <Tex>{"A\\cdot X=B"}</Tex> ko'rinishda yozamiz (A — koeffitsiyentlar jadvali, X — noma'lumlar ustuni, B — o'ng tomondagi sonlar). Ikki tomonni chapdan teskari matritsa <Tex>{"A^{-1}"}</Tex> ga ko'paytiramiz.</>,
+      formula: "X = A^{-1}\\cdot B",
       steps: [
         <><Tex>{`${sys(EXA, EXB, ["x", "y"])} \\Rightarrow A=${tmat(EXA)},\\ B=${tmat([[3], [-1]])}`}</Tex></>,
         <><Tex>{"\\det A = -5,\\quad A^{-1}=\\frac{1}{-5}\\begin{pmatrix}-2&-1\\\\-1&2\\end{pmatrix}"}</Tex></>,
@@ -93,7 +116,7 @@ export const T3: PrepTopic = {
     },
     {
       title: "Gauss usuli",
-      rule: <>Kengaytirilgan matritsa <Tex>{"(A|B)"}</Tex> ni satr amallari bilan <b>zinapoya</b> ko'rinishiga keltiramiz (diagonal ostida nollar), so'ng pastdan yuqoriga yechamiz. Ruxsat etilgan amallar: satrlarni almashtirish, satrni songa ko'paytirish, satrga boshqa satrni songa ko'paytirib qo'shish.</>,
+      rule: <>Koeffitsiyentlar va o'ng tomonni bitta jadvalga yozamiz (kengaytirilgan matritsa). Satrlar ustida amallar bajarib, diagonal ostini <b>nolga</b> keltiramiz (zinapoya ko'rinishi), so'ng pastdan yuqoriga yechamiz. Ruxsat etilgan amallar: ikki satrni almashtirish; satrni songa ko'paytirish; bir satrga boshqa satrni biror songa ko'paytirib qo'shish. <Tex>{"R_2-R_1"}</Tex> yozuvi: "2-satrdan 1-satrni ayiramiz".</>,
       steps: [
         <><Tex>{"\\left(\\begin{array}{ccc|c}1&1&1&6\\\\1&-1&1&2\\\\2&1&-1&1\\end{array}\\right)"}</Tex></>,
         <><Tex>{"R_2-R_1,\\ R_3-2R_1:\\ \\left(\\begin{array}{ccc|c}1&1&1&6\\\\0&-2&0&-4\\\\0&-1&-3&-11\\end{array}\\right)"}</Tex></>,
@@ -103,21 +126,22 @@ export const T3: PrepTopic = {
     },
     {
       title: "Yechim bormi? (Kroneker–Kapelli)",
-      rule: <>Sistema birgalikda ⇔ <Tex>{"\\text{rang}A=\\text{rang}(A|B)"}</Tex>. Rang = noma'lumlar soni → yagona yechim; kichik → cheksiz ko'p. 2×2 da tez tekshiruv: <Tex>{"\\Delta\\neq0"}</Tex> → yagona; <Tex>{"\\Delta=0"}</Tex> → yo'q yoki cheksiz.</>,
+      rule: <>Kroneker–Kapelli teoremasi: sistema yechimga ega bo'lishi uchun asosiy matritsa va kengaytirilgan matritsa ranglari teng bo'lishi kerak. Rang noma'lumlar soniga teng bo'lsa — yechim yagona, kichik bo'lsa — cheksiz ko'p. <b>Tez tekshiruv:</b> <Tex>{"\\Delta\\neq0"}</Tex> bo'lsa, yechim yagona. <Tex>{"\\Delta=0"}</Tex> bo'lsa, yechim yo'q yoki cheksiz ko'p.</>,
+      formula: "\\operatorname{rang} A = \\operatorname{rang}(A\\,|\\,B)",
       steps: [
         <><Tex>{"\\begin{cases}x+2y=3\\\\2x+4y=7\\end{cases}"}</Tex>: <Tex>{"\\Delta=4-4=0"}</Tex>.</>,
-        <>2-tenglama chap tomoni 1-sining 2 barobari, lekin 7 ≠ 2·3 = 6 — <b>ziddiyat</b>, yechim yo'q (to'g'ri chiziqlar parallel).</>,
-        <>Agar o'ng tomon 6 bo'lsa — ikki tenglama bir xil, <b>cheksiz ko'p</b> yechim.</>,
+        <>2-tenglamaning chap tomoni 1-sining 2 baravari, lekin o'ng tomonda <Tex>{"7\\neq2\\cdot3"}</Tex>. Bu <b>ziddiyat</b>, demak yechim yo'q (grafikda ikki to'g'ri chiziq parallel).</>,
+        <>Agar o'ng tomonda 6 bo'lganida, ikki tenglama aslida bitta bo'lardi va yechim <b>cheksiz ko'p</b> bo'lardi.</>,
       ],
     },
   ],
   mistakes: [
-    { wrong: <><Tex>{"\\Delta_x"}</Tex> da ozod hadlarni 2-ustunga qo'yish</>, right: <><Tex>{"\\Delta_x"}</Tex> — <b>x ning</b> ustuni (1-ustun) almashtiriladi, <Tex>{"\\Delta_y"}</Tex> — 2-ustun.</> },
-    { wrong: <><Tex>{"x=\\Delta/\\Delta_x"}</Tex></>, right: <><Tex>{"x=\\Delta_x/\\Delta"}</Tex> — asosiy determinant maxrajda.</> },
-    { wrong: <>Tenglamada x yo'q bo'lsa koeffitsiyentni tashlab ketish</>, right: <>Yo'q noma'lum o'rniga <b>0</b> yoziladi: <Tex>{"x+z=5 \\to (1,\\ 0,\\ 1\\,|\\,5)"}</Tex>.</> },
-    { wrong: <><Tex>{"\\Delta=0"}</Tex> → "yechim yo'q"</>, right: <><Tex>{"\\Delta=0"}</Tex> → yechim yo'q <b>yoki</b> cheksiz ko'p. Kroneker–Kapelli bilan aniqlanadi.</> },
-    { wrong: <>Birgalikda = yagona yechimli</>, right: <>Birgalikda = <b>kamida bitta</b> yechimga ega. Yagona bo'lsa — "aniq".</> },
-    { wrong: <>Gaussda faqat chap tomonni o'zgartirish</>, right: <>Satr amali <b>butun satrga</b>, ozod had bilan birga qo'llanadi.</> },
+    { wrong: <><Tex>{"\\Delta_x"}</Tex> ni hisoblashda o'ng tomondagi sonlarni 2-ustunga qo'yish</>, right: <><Tex>{"\\Delta_x"}</Tex> da <b>x ning</b> ustuni (1-ustun) almashtiriladi, <Tex>{"\\Delta_y"}</Tex> da esa 2-ustun.</> },
+    { wrong: <><Tex>{"x=\\frac{\\Delta}{\\Delta_x}"}</Tex></>, right: <><Tex>{"x=\\frac{\\Delta_x}{\\Delta}"}</Tex>: asosiy determinant har doim <b>maxrajda</b> turadi.</> },
+    { wrong: <>Tenglamada biror noma'lum yo'q bo'lsa, uni tashlab ketish</>, right: <>Yo'q noma'lumning o'rniga <b>0</b> yoziladi. Masalan, <Tex>{"x+z=5"}</Tex> tenglama <Tex>{"x+0\\cdot y+z=5"}</Tex> deb olinadi.</> },
+    { wrong: <><Tex>{"\\Delta=0"}</Tex> bo'lsa, "yechim yo'q" deyish</>, right: <><Tex>{"\\Delta=0"}</Tex> bo'lsa, yechim yo'q <b>yoki</b> cheksiz ko'p bo'ladi. Qaysi biri ekanini o'ng tomon hal qiladi.</> },
+    { wrong: <>"Birgalikda" — yagona yechimli degani</>, right: <>Birgalikda — <b>kamida bitta</b> yechimi bor degani. Yechim yagona bo'lsa, sistema "aniq" deyiladi.</> },
+    { wrong: <>Gauss usulida faqat chap tomonni o'zgartirish</>, right: <>Satr amali <b>butun satrga</b>, o'ng tomondagi son bilan birga qo'llanadi.</> },
   ],
   gens: [
     {
@@ -142,7 +166,7 @@ export const T3: PrepTopic = {
         return {
           q: <>Sistemani yeching va <Tex>{"x_1^2+x_2^2"}</Tex> ni toping: <Tex>{sys(A, b, ["x_1", "x_2"])}</Tex></>,
           ans: [{ v }],
-          traps: [{ v: [x[0] + x[1]], why: "Bu x₁ + x₂. Kvadratlar yig'indisi so'ralgan." }, { v: [(x[0] + x[1]) ** 2], why: "Bu (x₁ + x₂)². Har birini alohida kvadratga oshiring." }],
+          traps: [{ v: [x[0] + x[1]], why: "Siz $x_1+x_2$ ni topdingiz. Kvadratlar yig'indisi so'ralgan." }, { v: [(x[0] + x[1]) ** 2], why: "Siz $(x_1+x_2)^2$ ni topdingiz. Har birini alohida kvadratga oshirib, keyin qo'shing." }],
           steps: [...kramer2Steps(A, b), <><Tex>{`x_1^2+x_2^2 = ${tp(x[0])}^2 + ${tp(x[1])}^2 = ${v}`}</Tex></>],
         };
       },
@@ -159,9 +183,9 @@ export const T3: PrepTopic = {
         return {
           q: <><Tex>{sys(A, b, ["x", "y"])}</Tex> sistema uchun <Tex>{name}</Tex> ni hisoblang.</>,
           ans: [{ v }],
-          traps: which === "Dx" ? [{ v: [Dy], why: "Bu Δy. Δx da 1-ustun (x koeffitsiyentlari) almashtiriladi." }] : which === "Dy" ? [{ v: [Dx], why: "Bu Δx. Δy da 2-ustun almashtiriladi." }] : [],
+          traps: which === "Dx" ? [{ v: [Dy], why: "Siz $\\Delta_y$ ni topdingiz. $\\Delta_x$ da 1-ustun (x oldidagi sonlar) almashtiriladi." }] : which === "Dy" ? [{ v: [Dx], why: "Siz $\\Delta_x$ ni topdingiz. $\\Delta_y$ da 2-ustun almashtiriladi." }] : [],
           steps: [
-            which === "D" ? <>Koeffitsiyentlar: <Tex>{`${tmat(A, "v")} = ${tn(D)}`}</Tex></> : which === "Dx" ? <>1-ustun → ozod hadlar: <Tex>{`${tmat(withCol(A, b, 0), "v")} = ${tn(Dx)}`}</Tex></> : <>2-ustun → ozod hadlar: <Tex>{`${tmat(withCol(A, b, 1), "v")} = ${tn(Dy)}`}</Tex></>,
+            which === "D" ? <>Noma'lumlar oldidagi sonlardan: <Tex>{`${tmat(A, "v")} = ${tn(D)}`}</Tex></> : which === "Dx" ? <>1-ustun o'rniga o'ng tomondagi sonlar: <Tex>{`${tmat(withCol(A, b, 0), "v")} = ${tn(Dx)}`}</Tex></> : <>2-ustun o'rniga o'ng tomondagi sonlar: <Tex>{`${tmat(withCol(A, b, 1), "v")} = ${tn(Dy)}`}</Tex></>,
           ],
         };
       },
@@ -200,8 +224,8 @@ export const T3: PrepTopic = {
           choice: { options: ["Yagona yechim", "Yechimi yo'q", "Cheksiz ko'p yechim"], correct: t === "one" ? 0 : t === "none" ? 1 : 2 },
           steps: [
             <><Tex>{`\\Delta = ${tmat(A, "v")} = ${tn(D)}`}</Tex></>,
-            t === "one" ? <><Tex>{"\\Delta\\neq0"}</Tex> → yagona yechim (aniq sistema).</> : <><Tex>{"\\Delta=0"}</Tex>: 2-tenglama chap tomoni = {k} × 1-tenglama chap tomoni.</>,
-            t === "none" ? <>O'ng tomon: <Tex>{`${tn(b[1])} \\neq ${tn(k)}\\cdot${tp(b[0])} = ${tn(k * b[0])}`}</Tex> → ziddiyat, yechim yo'q.</> : t === "inf" ? <>O'ng tomon ham {k} barobar → ikki tenglama bir xil, cheksiz ko'p yechim.</> : <>Kramer bilan topiladi.</>,
+            t === "one" ? <><Tex>{"\\Delta\\neq0"}</Tex>, demak yechim yagona (aniq sistema).</> : <><Tex>{"\\Delta=0"}</Tex>: 2-tenglamaning chap tomoni 1-sining chap tomonini <Tex>{tp(k)}</Tex> ga ko'paytirganga teng.</>,
+            t === "none" ? <>O'ng tomonda esa <Tex>{`${tn(b[1])} \\neq ${tp(k)}\\cdot${tp(b[0])} = ${tn(k * b[0])}`}</Tex>. Ziddiyat — yechim yo'q.</> : t === "inf" ? <>O'ng tomon ham <Tex>{tp(k)}</Tex> baravar. Demak ikki tenglama aslida bitta — yechim cheksiz ko'p.</> : <>Yechimni Kramer usulida topish mumkin.</>,
           ],
         };
       },
@@ -209,23 +233,23 @@ export const T3: PrepTopic = {
   ],
   tests: [
     { id: "t3:test:1", q: "Quyidagilardan qaysi biri chiziqli tenglamalar sistemasi?", options: [<Tex>{"\\begin{cases}x^2+y=2\\\\x+y^2=1\\end{cases}"}</Tex>, <Tex>{"\\begin{cases}\\frac1x+\\frac1y=2\\\\x-y=1\\end{cases}"}</Tex>, <Tex>{"\\begin{cases}xy=2\\\\x+y=3\\end{cases}"}</Tex>, <Tex>{"\\begin{cases}2x-3y=5\\\\x+4y=-1\\end{cases}"}</Tex>, <Tex>{"\\begin{cases}\\sqrt x+y=2\\\\x=1\\end{cases}"}</Tex>], correct: 3, explain: "Chiziqli: noma'lumlar faqat birinchi darajada va bir-biriga ko'paytirilmagan." },
-    { id: "t3:test:2", q: <><Tex>{"\\begin{cases}3x_1-2x_2=5\\\\2x_1-3x_2=0\\end{cases}"}</Tex> sistemaning koeffitsiyentlari yig'indisi:</>, options: ["10", "0", "5", "15", "−5"], correct: 1, explain: "Koeffitsiyentlar — noma'lumlar oldidagi sonlar: 3 + (−2) + 2 + (−3) = 0. Ozod hadlar (5, 0) kirmaydi." },
-    { id: "t3:test:3", q: "Uch noma'lumli sistemaning yechimi deb shunday (α, β, γ) sonlarga aytiladiki, ular sistemaning … tenglamalarini ayniyatga aylantiradi.", options: ["birinchi", "ikkinchi", "birorta", "kamida bitta", "barcha (uchala)"], correct: 4, explain: "Yechim HAMMA tenglamani bir vaqtda qanoatlantiradi." },
-    { id: "t3:test:4", q: "Qachon chiziqli tenglamalar sistemasi birgalikda deyiladi?", options: ["Yechimga ega bo'lmasa", "Kamida bitta yechimga ega bo'lsa", "Faqat yagona yechimga ega bo'lsa", "Faqat cheksiz ko'p yechimga ega bo'lsa", "Δ = 0 bo'lsa"], correct: 1, explain: "Birgalikda = yechimi bor (bitta yoki cheksiz ko'p)." },
-    { id: "t3:test:5", q: <>Sistemani yeching va <Tex>{"x_1^2+x_2^2"}</Tex> ni toping: <Tex>{"\\begin{cases}x_1+2x_2=3\\\\2x_1-x_2=1\\end{cases}"}</Tex></>, options: ["5", "1", "4", "2", "3"], correct: 3, explain: <>Kramer: Δ = −1 − 4 = −5, Δ₁ = −3 − 2 = −5, Δ₂ = 1 − 6 = −5 → x₁ = x₂ = 1, 1² + 1² = 2.</> },
-    { id: "t3:test:6", q: "Kramer formulalarini qachon qo'llash mumkin?", options: ["Har doim", "Asosiy determinant Δ ≠ 0 bo'lsa", "Δ = 0 bo'lsa", "Faqat bir jinsli sistemada", "Noma'lumlar soni tenglamalardan ko'p bo'lsa"], correct: 1, explain: "Δ maxrajda — nolga bo'lib bo'lmaydi. Kvadrat sistema va Δ ≠ 0." },
-    { id: "t3:test:7", q: "Kroneker–Kapelli teoremasi bo'yicha sistema birgalikda bo'lishi uchun…", options: ["det A ≠ 0", "rang A = rang (A|B)", "rang A < n", "B = 0", "rang A = 1"], correct: 1, explain: "Asosiy va kengaytirilgan matritsalar ranglari teng bo'lishi zarur va yetarli." },
-    { id: "t3:test:8", q: "Bir jinsli sistema (barcha ozod hadlar 0) haqida qaysi tasdiq to'g'ri?", options: ["Hech qachon yechimga ega emas", "Har doim birgalikda (kamida nol yechim bor)", "Har doim cheksiz ko'p yechimli", "Faqat Δ = 0 da yechimli", "Faqat Gauss bilan yechiladi"], correct: 1, explain: "x = y = z = 0 har doim yechim. Δ = 0 bo'lsa — nolmas yechimlar ham bor." },
-    { id: "t3:test:9", q: "Matritsa usulida yechim qanday topiladi?", options: ["X = AB", "X = BA⁻¹", "X = A⁻¹B", "X = Aᵀ B", "X = B / A"], correct: 2, explain: "AX = B ni chapdan A⁻¹ ga ko'paytiramiz: X = A⁻¹B. Tartib muhim!" },
+    { id: "t3:test:2", q: <><Tex>{"\\begin{cases}3x_1-2x_2=5\\\\2x_1-3x_2=0\\end{cases}"}</Tex> sistemaning koeffitsiyentlari yig'indisi:</>, options: ["10", "0", "5", "15", "$-5$"], correct: 1, explain: "Koeffitsiyentlar — noma'lumlar oldidagi sonlar: $3+(-2)+2+(-3)=0$. O'ng tomondagi sonlar (5 va 0) kirmaydi." },
+    { id: "t3:test:3", q: "Uch noma'lumli sistemaning yechimi deb shunday $(\\alpha;\\ \\beta;\\ \\gamma)$ sonlarga aytiladiki, ular sistemaning … tenglamalarini ayniyatga aylantiradi.", options: ["birinchi", "ikkinchi", "birorta", "kamida bitta", "barcha (uchala)"], correct: 4, explain: "Yechim HAMMA tenglamani bir vaqtda qanoatlantiradi. ($\\alpha,\\ \\beta,\\ \\gamma$ — alfa, beta, gamma: shunchaki sonlarning nomi.)" },
+    { id: "t3:test:4", q: "Qachon chiziqli tenglamalar sistemasi birgalikda deyiladi?", options: ["Yechimga ega bo'lmasa", "Kamida bitta yechimga ega bo'lsa", "Faqat yagona yechimga ega bo'lsa", "Faqat cheksiz ko'p yechimga ega bo'lsa", "$\\Delta=0$ bo'lsa"], correct: 1, explain: "Birgalikda — yechimi bor (bitta yoki cheksiz ko'p)." },
+    { id: "t3:test:5", q: <>Sistemani yeching va <Tex>{"x_1^2+x_2^2"}</Tex> ni toping: <Tex>{"\\begin{cases}x_1+2x_2=3\\\\2x_1-x_2=1\\end{cases}"}</Tex></>, options: ["5", "1", "4", "2", "3"], correct: 3, explain: <>Kramer usuli: <Tex>{"\\Delta=\\begin{vmatrix}1&2\\\\2&-1\\end{vmatrix}=-1-4=-5"}</Tex>, <Tex>{"\\Delta_1=\\begin{vmatrix}3&2\\\\1&-1\\end{vmatrix}=-5"}</Tex>, <Tex>{"\\Delta_2=\\begin{vmatrix}1&3\\\\2&1\\end{vmatrix}=-5"}</Tex>. Demak <Tex>{"x_1=\\frac{-5}{-5}=1,\\ x_2=1"}</Tex> va <Tex>{"1^2+1^2=2"}</Tex>.</> },
+    { id: "t3:test:6", q: "Kramer formulalarini qachon qo'llash mumkin?", options: ["Har doim", "Asosiy determinant $\\Delta\\neq0$ bo'lsa", "$\\Delta=0$ bo'lsa", "Faqat bir jinsli sistemada", "Noma'lumlar soni tenglamalardan ko'p bo'lsa"], correct: 1, explain: "Formulada $\\Delta$ maxrajda turadi, nolga esa bo'lib bo'lmaydi." },
+    { id: "t3:test:7", q: "Kroneker–Kapelli teoremasi bo'yicha sistema birgalikda bo'lishi uchun…", options: ["$\\det A\\neq0$", "$\\operatorname{rang}A=\\operatorname{rang}(A\\,|\\,B)$", "$\\operatorname{rang}A<n$", "$B=0$", "$\\operatorname{rang}A=1$"], correct: 1, explain: "Asosiy matritsa va kengaytirilgan matritsa ranglari teng bo'lishi kerak." },
+    { id: "t3:test:8", q: "Bir jinsli sistema (o'ng tomondagi barcha sonlar 0) haqida qaysi tasdiq to'g'ri?", options: ["Hech qachon yechimga ega emas", "Har doim birgalikda (kamida nol yechim bor)", "Har doim cheksiz ko'p yechimli", "Faqat $\\Delta=0$ da yechimli", "Faqat Gauss usulida yechiladi"], correct: 1, explain: "$x=y=z=0$ har doim yechim bo'ladi. $\\Delta=0$ bo'lsa, noldan farqli yechimlar ham bor." },
+    { id: "t3:test:9", q: "Matritsa usulida yechim qanday topiladi?", options: ["$X=A\\cdot B$", "$X=B\\cdot A^{-1}$", "$X=A^{-1}\\cdot B$", "$X=A^T\\cdot B$", "$X=\\dfrac{B}{A}$"], correct: 2, explain: "$A\\cdot X=B$ tenglikni chapdan $A^{-1}$ ga ko'paytiramiz: $X=A^{-1}\\cdot B$. Ko'paytuvchilar tartibi muhim! Matritsaga bo'lish amali yo'q." },
     { id: "t3:test:10", q: "Gauss usulining mohiyati:", options: ["Determinantlarni hisoblash", "Teskari matritsani topish", "Noma'lumlarni ketma-ket yo'qotish (zinapoya ko'rinishi)", "Grafik usulda yechish", "Tanlash usuli"], correct: 2, explain: "Satr amallari bilan diagonal ostini nolga keltirib, pastdan yuqoriga yechamiz." },
   ],
   cheat: [
-    { t: "Kramer", f: <Tex>{"x_i=\\frac{\\Delta_i}{\\Delta},\\ \\Delta\\neq0"}</Tex> },
-    { t: "Δᵢ", f: <>i-ustun o'rniga ozod hadlar ustuni</> },
-    { t: "Matritsa usuli", f: <Tex>{"AX=B\\Rightarrow X=A^{-1}B"}</Tex> },
-    { t: "Gauss", f: <><Tex>{"(A|B)"}</Tex> → zinapoya → pastdan yuqoriga</> },
-    { t: "Kroneker–Kapelli", f: <Tex>{"\\text{rang}A=\\text{rang}(A|B)"}</Tex> },
-    { t: "Turlar", f: <>Birgalikda (≥1 yechim): aniq (1 ta) / aniqmas (∞). Birgalikda emas — yechim yo'q.</> },
+    { t: "Kramer", f: <><Tex>{"x=\\frac{\\Delta_x}{\\Delta},\\quad y=\\frac{\\Delta_y}{\\Delta}"}</Tex>, faqat <Tex>{"\\Delta\\neq0"}</Tex> bo'lsa</> },
+    { t: "Δₓ qanday tuziladi", f: <>x ning ustuni o'rniga o'ng tomondagi sonlar yoziladi</> },
+    { t: "Matritsa usuli", f: <Tex>{"A\\cdot X=B\\quad\\Rightarrow\\quad X=A^{-1}\\cdot B"}</Tex> },
+    { t: "Gauss", f: <>Kengaytirilgan matritsa <Tex>{"(A\\,|\\,B)"}</Tex>, so'ng zinapoya ko'rinishi, so'ng pastdan yuqoriga yechish</> },
+    { t: "Kroneker–Kapelli", f: <Tex>{"\\operatorname{rang}A=\\operatorname{rang}(A\\,|\\,B)"}</Tex> },
+    { t: "Turlar", f: <>Birgalikda (kamida 1 yechim): aniq (1 ta yechim) yoki aniqmas (cheksiz ko'p). Birgalikda emas — yechim yo'q.</> },
   ],
   lessons: ["sistema", "kramer", "gauss", "rang"],
 };

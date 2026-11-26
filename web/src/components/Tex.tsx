@@ -5,7 +5,8 @@ import { useLayoutEffect, useRef } from "react";
 export function Tex({ children, block = false }: { children: string; block?: boolean }) {
   const ref = useRef<HTMLDivElement & HTMLSpanElement>(null);
   useLayoutEffect(() => {
-    if (ref.current) katex.render(children, ref.current, { displayMode: block, throwOnError: false, strict: false });
+    // Matn ichida ham "daftardagidek" to'liq o'lcham: kasrlar ustma-ust, mayda emas
+    if (ref.current) katex.render(block ? children : `\\displaystyle ${children}`, ref.current, { displayMode: block, throwOnError: false, strict: false });
   }, [children, block]);
   return block ? <div className="tex-block" ref={ref} /> : <span ref={ref} />;
 }
