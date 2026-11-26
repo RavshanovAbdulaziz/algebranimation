@@ -1,6 +1,7 @@
 import { Tex } from "../components/Tex";
 import { prodAnim } from "./anim";
 import { det2, det3, pick, ri, rnz, tmat, tn, tp, tvec, type PrepTopic } from "./core";
+import { eigAnim, kramerAnim, matrixAnim, sarrusAnim, solvexAnim } from "./anim";
 
 const apply = (A: number[][], x: number[]) => A.map((r) => r.reduce((s, a, k) => s + a * x[k], 0));
 const rowTex = (r: number[], x: number[]) => `${r.map((a, k) => `${tp(a)}\\cdot${tp(x[k])}`).join("+")} = ${tn(r.reduce((s, a, k) => s + a * x[k], 0))}`;
@@ -38,6 +39,7 @@ export const T5: PrepTopic = {
   recipes: [
     {
       title: "Vektor fazoda tenglama",
+      anim: solvexAnim(3, [3, -2, 1, 4], [6, 4, 1, 13]),
       gens: ["solvex"],
       rule: <>Vektorli tenglamani oddiy sonli tenglamadek yechamiz, faqat har bir koordinata bilan alohida ishlaymiz.</>,
       formula: "3x+y=z\\quad\\Rightarrow\\quad 3x=z-y\\quad\\Rightarrow\\quad x=\\frac{z-y}{3}",
@@ -49,6 +51,7 @@ export const T5: PrepTopic = {
     },
     {
       title: "Bazis bo'yicha yoyilma",
+      anim: kramerAnim([[1, 1], [1, -1]], [5, 1], ["\\alpha", "\\beta"]),
       gens: ["basis"],
       rule: <>Noma'lum koeffitsiyentlarni <Tex>{"\\alpha,\\ \\beta,\\ \\gamma"}</Tex> deb olamiz. Tenglikni koordinatalar bo'yicha yozsak, <b>tenglamalar sistemasi</b> chiqadi. Uni Kramer yoki Gauss usulida yechamiz.</>,
       formula: "x=\\alpha\\cdot e_1+\\beta\\cdot e_2+\\gamma\\cdot e_3",
@@ -60,6 +63,7 @@ export const T5: PrepTopic = {
     },
     {
       title: "Chiziqli bog'liqlik (bazis bo'ladimi?)",
+      anim: sarrusAnim([[1, 2, 3], [0, 1, 1], [1, 3, 4]]),
       gens: ["dep"],
       rule: <>Vektorlarni determinantning satrlariga yozamiz. Determinant <b>0 ga teng</b> bo'lsa, vektorlar <b>chiziqli bog'liq</b> (bazis bo'la olmaydi). <b>Noldan farqli</b> bo'lsa, <b>chiziqli erkli</b> (bazis bo'ladi).</>,
       steps: [
@@ -70,6 +74,7 @@ export const T5: PrepTopic = {
     },
     {
       title: "Operator: tasvir va aks tasvir",
+      anim: prodAnim([[1, 2, -1], [0, 1, 3], [2, 0, 1]], [[1], [-1], [2]]),
       gens: ["image", "pre"],
       rule: <><b>Tasvir</b>: x berilgan, y ni topish kerak — matritsani vektorga "satrni ustunga" ko'paytiramiz. <b>Aks tasvir</b>: y berilgan, x ni topish kerak — tenglamalar sistemasini yechamiz.</>,
       formula: "\\text{tasvir: } y=A\\cdot x,\\qquad \\text{aks tasvir: } x=A^{-1}\\cdot y",
@@ -83,6 +88,7 @@ export const T5: PrepTopic = {
     },
     {
       title: "Xos sonlar va xos vektorlar",
+      anim: eigAnim([[4, 1], [2, 3]]),
       gens: ["eig"],
       rule: <>Xos sonlar <b>xarakteristik tenglamadan</b> topiladi: matritsaning diagonal elementlaridan <Tex>{"\\lambda"}</Tex> ni ayirib, determinantini nolga tenglaymiz. Keyin har bir topilgan <Tex>{"\\lambda"}</Tex> uchun xos vektorni topamiz.</>,
       formula: "\\begin{vmatrix}a-\\lambda&b\\\\c&d-\\lambda\\end{vmatrix}=0\\quad\\Leftrightarrow\\quad \\lambda^2-(a+d)\\lambda+(ad-bc)=0",
@@ -115,6 +121,7 @@ export const T5: PrepTopic = {
           q: <><Tex>{`y=${tvec(y)}`}</Tex> va <Tex>{`${tn(k)}x+y=${tvec(z)}`}</Tex>. x vektorni toping.</>,
           ans: x.map((v, i) => ({ label: <Tex>{`x_${i + 1}`}</Tex>, v })),
           traps: [{ v: z.map((v, i) => (v + y[i]) / k), why: "y ni ayirish o'rniga qo'shdingiz: $kx=z-y$." }],
+          anim: solvexAnim(k, y, z),
           steps: [
             <><Tex>{`${tn(k)}x = z - y = ${tvec(z.map((v, i) => v - y[i]))}`}</Tex></>,
             <><Tex>{`x = \\frac{1}{${tn(k)}}${tvec(z.map((v, i) => v - y[i]))} = ${tvec(x)}`}</Tex></>,
@@ -151,6 +158,7 @@ export const T5: PrepTopic = {
           q: <><Tex>{`A=${tmat(A)}`}</Tex> operator uchun <Tex>{`y=${tvec(y)}`}</Tex> vektorning aks tasvirini (x ni) toping.</>,
           ans: x.map((v, i) => ({ label: <Tex>{`x_${i + 1}`}</Tex>, v })),
           traps: [{ v: imgWrong, why: "Siz y ning tasvirini ($A\\cdot y$) topdingiz. Aks tasvir uchun $A\\cdot x=y$ sistemani yechish kerak." }],
+          anim: matrixAnim(A, y),
           steps: [
             <>Sistema: <Tex>{`\\begin{cases} ${tn(A[0][0])}x_1 ${A[0][1] < 0 ? "-" : "+"} ${Math.abs(A[0][1])}x_2 = ${tn(y[0])} \\\\ ${tn(A[1][0])}x_1 ${A[1][1] < 0 ? "-" : "+"} ${Math.abs(A[1][1])}x_2 = ${tn(y[1])} \\end{cases}`}</Tex></>,
             <><Tex>{`\\Delta=${tn(d)},\\ \\Delta_1=${tn(det2([[y[0], A[0][1]], [y[1], A[1][1]]]))},\\ \\Delta_2=${tn(det2([[A[0][0], y[0]], [A[1][0], y[1]]]))}`}</Tex></>,
@@ -176,6 +184,7 @@ export const T5: PrepTopic = {
             q: <><Tex>{`A=${tmat(A)}`}</Tex> matritsaning xos sonlarini toping.</>,
             ans: [{ label: <Tex>{"\\lambda_1"}</Tex>, v: l1 }, { label: <Tex>{"\\lambda_2"}</Tex>, v: l2 }],
             unordered: true,
+            anim: eigAnim(A),
             steps: [
               <><Tex>{`\\begin{vmatrix} ${tn(a)}-\\lambda & ${tn(b)} \\\\ ${tn(c)} & ${tn(d)}-\\lambda \\end{vmatrix} = 0`}</Tex></>,
               <><Tex>{`\\lambda^2 - (${tn(a)}${d < 0 ? "" : "+"}${tn(d)})\\lambda + (${tp(a)}\\cdot${tp(d)} - ${tp(b)}\\cdot${tp(c)}) = 0`}</Tex></>,
@@ -198,6 +207,7 @@ export const T5: PrepTopic = {
         return {
           q: <><Tex>{`a_1=${tvec(a1)},\\ a_2=${tvec(a2)},\\ a_3=${tvec(a3)}`}</Tex> vektorlar…</>,
           choice: { options: ["Chiziqli bog'liq", "Chiziqli erkli (bazis tashkil etadi)"], correct: D === 0 ? 0 : 1 },
+          anim: sarrusAnim([a1, a2, a3]),
           steps: [
             <><Tex>{`${tmat([a1, a2, a3], "v")} = ${tn(D)}`}</Tex></>,
             D === 0 ? <>0 ga teng, demak vektorlar <b>bog'liq</b>{dep && <> (<Tex>{`a_3 = ${tn(p)}a_1 ${q < 0 ? "-" : "+"} ${tn(Math.abs(q))}a_2`}</Tex>)</>}.</> : <>0 ga teng emas, demak vektorlar <b>erkli</b> va bazis bo'ladi.</>,
@@ -218,6 +228,7 @@ export const T5: PrepTopic = {
           q: <><Tex>{`e_1=${tvec(e1)},\\ e_2=${tvec(e2)}`}</Tex> bazisda <Tex>{`x=${tvec(x)}`}</Tex> vektorning yoyilmasini toping: <Tex>{"x=\\alpha e_1+\\beta e_2"}</Tex>.</>,
           ans: [{ label: <Tex>{"\\alpha"}</Tex>, v: al }, { label: <Tex>{"\\beta"}</Tex>, v: be }],
           traps: [{ v: [be, al], why: "$\\alpha$ va $\\beta$ o'rnini almashtirdingiz: $\\alpha$ — $e_1$ oldidagi son." }],
+          anim: kramerAnim([[e1[0], e2[0]], [e1[1], e2[1]]], x, ["\\alpha", "\\beta"]),
           steps: [
             <><b>Tenglikni koordinatalar bo'yicha yozamiz.</b> Har bir koordinata uchun alohida tenglama chiqadi: <Tex block>{`\\alpha${tvec(e1)} + \\beta${tvec(e2)} = ${tvec(x)}\\quad\\Rightarrow\\quad \\begin{cases} ${tn(e1[0])}\\alpha ${e2[0] < 0 ? "-" : "+"} ${Math.abs(e2[0])}\\beta = ${tn(x[0])} \\\\ ${tn(e1[1])}\\alpha ${e2[1] < 0 ? "-" : "+"} ${Math.abs(e2[1])}\\beta = ${tn(x[1])} \\end{cases}`}</Tex></>,
             <><b>Kramer usuli bilan yechamiz:</b> <Tex>{`\\Delta = ${tmat([[e1[0], e2[0]], [e1[1], e2[1]]], "v")} = ${tn(d)},\\quad \\Delta_\\alpha = ${tmat([[x[0], e2[0]], [x[1], e2[1]]], "v")} = ${tn(dA)},\\quad \\Delta_\\beta = ${tmat([[e1[0], x[0]], [e1[1], x[1]]], "v")} = ${tn(dB)}`}</Tex></>,

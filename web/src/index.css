@@ -533,3 +533,33 @@ details.am-text[open] > summary { margin-bottom: 6px; }
 .fx-motion[aria-pressed="true"] { color: #c9ced6; border-color: #3a4352; }
 .fx-motion:hover { border-color: var(--fx-a); color: #e6e8ec; }
 .fx-motion:focus-visible { outline: 2px solid var(--fx-a); outline-offset: 2px; }
+/* --- yo'l izi, amal belgisi, daftar, tepadagi izoh --- */
+.fx-cap { display: flex; align-items: flex-start; justify-content: center; gap: 10px; text-align: left; margin: 0 auto 10px; max-width: 64ch; font-size: 1.04rem; color: #e6e8ec; min-height: 2.2em; }
+.fx-stepno { flex: 0 0 auto; display: inline-grid; place-items: center; min-width: 26px; height: 26px; padding: 0 6px; border-radius: 8px; background: rgba(88, 196, 221, .14); color: var(--fx-a); font-size: .82rem; font-weight: 700; font-variant-numeric: tabular-nums; margin-top: 1px; }
+.fx-body { display: block; }
+.fx-body.has-notes { display: grid; grid-template-columns: minmax(0, 1fr) minmax(190px, 240px); gap: 14px; align-items: stretch; }
+.fx-svg .fx-trail { fill: none; stroke-width: 2.2; stroke-linecap: round; opacity: .55; stroke-dasharray: 1; stroke-dashoffset: 1; animation-name: fxDraw; animation-timing-function: cubic-bezier(0.45, 0, 0.2, 1); animation-fill-mode: both; }
+.fx-trail.t-a { stroke: var(--fx-a); } .fx-trail.t-b { stroke: var(--fx-b); } .fx-trail.t-c { stroke: var(--fx-c); } .fx-trail.t-d { stroke: var(--fx-d); }
+.fx-trail.t-goal, .fx-trail.t-res { stroke: var(--fx-res); } .fx-trail.t-gray { stroke: #6b7280; }
+.fx-mk.t-a { fill: var(--fx-a); } .fx-mk.t-b { fill: var(--fx-b); } .fx-mk.t-c { fill: var(--fx-c); } .fx-mk.t-d { fill: var(--fx-d); }
+.fx-mk.t-goal, .fx-mk.t-res { fill: var(--fx-res); } .fx-mk.t-gray { fill: #6b7280; }
+.fx-op { position: absolute; z-index: 4; padding: 1px 9px; border-radius: 999px; background: #f2f4f7; color: #14161b; font: 700 1rem/1.4 KaTeX_Main, serif; box-shadow: 0 6px 16px -6px rgba(0, 0, 0, .6); pointer-events: none; white-space: nowrap; }
+.fx-notes { background: rgba(255, 255, 255, .025); border: 1px solid #262c37; border-radius: 12px; padding: 10px 12px; min-height: calc(var(--rows, 3) * 0px + 80px); overflow: hidden; }
+.fx-notes-h { font-size: .78rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: #8b93a1; margin-bottom: 6px; }
+.fx-notes-empty { color: #6b7280; font-size: .86rem; }
+.fx-notes ol { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.fx-notes li { padding: 4px 8px; border-radius: 8px; color: #b9c0cb; cursor: pointer; overflow-x: auto; overflow-y: hidden; transition: background-color .25s, color .25s; }
+.fx-notes li:hover { background: rgba(255, 255, 255, .04); }
+.fx-notes li.new { background: rgba(255, 209, 102, .1); color: #fff; animation: fxIn .45s cubic-bezier(0.16, 1, 0.3, 1); }
+.fx-notes li .katex { font-size: 1.02em; }
+@media (max-width: 900px) {
+  .fx-body.has-notes { grid-template-columns: 1fr; }
+  .fx-notes { min-height: calc(var(--rows, 3) * 34px + 36px); }
+}
+.fx.calm .fx-svg .fx-trail { animation: none; stroke-dashoffset: 0; }
+
+/* Faqat ma'noli harakat: qatorlar chapdan tekislanadi — yangi son qo'shilganda eskilari joyidan qimirlamaydi */
+.fx-lines { align-items: stretch; padding-left: clamp(4px, 7%, 56px); padding-right: clamp(4px, 4%, 24px); }
+.fx-line-row { justify-content: flex-start; }
+
+.fx-line-row { gap: 8px 8px; }

@@ -1,5 +1,6 @@
 import { Tex } from "../components/Tex";
 import { pick, ri, rnz, shuffle, tn, tp, tvec, type PrepTopic } from "./core";
+import { colAnim, dotAnim, lenAnim, linCombAnim, perpAnim, sectionAnim, vecSubAnim } from "./anim";
 
 const dot = (a: number[], b: number[]) => a.reduce((s, x, i) => s + x * b[i], 0);
 const len = (a: number[]) => Math.sqrt(dot(a, a));
@@ -45,6 +46,7 @@ export const T4: PrepTopic = {
   recipes: [
     {
       title: "Vektor koordinatalari va yoyilmasi",
+      anim: vecSubAnim([1, 2, -3], [4, 0, 1]),
       gens: ["ab", "ort"],
       rule: <>Vektorning koordinatalarini topish uchun <b>oxirining koordinatalaridan boshining koordinatalarini</b> ayiramiz. Koordinatalarni ortlar orqali ham yozish mumkin: <Tex>{"\\vec a=(2;\\ -5)=2\\vec i-5\\vec j"}</Tex>.</>,
       formula: "\\overrightarrow{AB}=(x_B-x_A;\\ \\ y_B-y_A;\\ \\ z_B-z_A)",
@@ -56,6 +58,7 @@ export const T4: PrepTopic = {
     },
     {
       title: "Qo'shish, ayirish, songa ko'paytirish",
+      anim: linCombAnim([1, -2, 3], [0, 4, -1], 2, -3),
       gens: ["lin"],
       rule: <>Har bir koordinata alohida qo'shiladi; songa ko'paytirishda har bir koordinata shu songa ko'paytiriladi.</>,
       formula: "\\vec a+\\vec b=(x_1+x_2;\\ \\ y_1+y_2;\\ \\ z_1+z_2),\\qquad \\lambda\\cdot\\vec a=(\\lambda x;\\ \\ \\lambda y;\\ \\ \\lambda z)",
@@ -67,6 +70,7 @@ export const T4: PrepTopic = {
     },
     {
       title: "Uzunlik (modul)",
+      anim: lenAnim([2, -3, 6]),
       gens: ["len"],
       rule: <>Uzunlik Pifagor teoremasidan topiladi: koordinatalar kvadratlari yig'indisidan ildiz chiqariladi. Ikki nuqta orasidagi masofa — <Tex>{"\\overrightarrow{AB}"}</Tex> vektorning uzunligi.</>,
       formula: "|\\vec a|=\\sqrt{x^2+y^2+z^2}",
@@ -77,6 +81,7 @@ export const T4: PrepTopic = {
     },
     {
       title: "Skalyar ko'paytma va burchak",
+      anim: dotAnim([1, 2, 2], [2, -2, 1]),
       gens: ["dot", "perp"],
       rule: <>Mos koordinatalarni ko'paytirib, qo'shamiz — natija <b>son</b>. Shu son orqali vektorlar orasidagi burchak <Tex>{"\\varphi"}</Tex> (fi) topiladi. Skalyar ko'paytma 0 ga teng bo'lsa, vektorlar <b>perpendikulyar</b>.</>,
       formula: "\\vec a\\cdot\\vec b=x_1x_2+y_1y_2+z_1z_2,\\qquad \\cos\\varphi=\\frac{\\vec a\\cdot\\vec b}{|\\vec a|\\cdot|\\vec b|}",
@@ -89,6 +94,7 @@ export const T4: PrepTopic = {
     },
     {
       title: "Kollinearlik sharti",
+      anim: colAnim([2, 6, 6], [1, 3, 3], 1),
       gens: ["col"],
       rule: <>Ikki vektor kollinear (bir chiziqda yoki parallel) bo'lishi uchun ularning koordinatalari <b>proporsional</b> bo'lishi kerak, ya'ni biri ikkinchisining biror songa ko'paytirilgani bo'ladi.</>,
       formula: "\\frac{x_1}{x_2}=\\frac{y_1}{y_2}=\\frac{z_1}{z_2}",
@@ -100,6 +106,7 @@ export const T4: PrepTopic = {
     },
     {
       title: "Kesmani λ nisbatda bo'lish",
+      anim: sectionAnim([1, -2], [7, 4], 2),
       gens: ["div"],
       rule: <>C nuqta AB kesmani <Tex>{"AC:CB=\\lambda"}</Tex> nisbatda bo'lsa, uning koordinatalari quyidagicha topiladi (y va z uchun ham xuddi shunday). <Tex>{"\\lambda=1"}</Tex> bo'lsa, C — kesmaning o'rtasi: <Tex>{"x_C=\\frac{x_A+x_B}{2}"}</Tex>.</>,
       formula: "x_C=\\frac{x_A+\\lambda\\cdot x_B}{1+\\lambda},\\qquad y_C=\\frac{y_A+\\lambda\\cdot y_B}{1+\\lambda}",
@@ -129,6 +136,7 @@ export const T4: PrepTopic = {
           q: <>Boshi <Tex>{pt("A", A)}</Tex>, oxiri <Tex>{pt("B", B)}</Tex>. <Tex>{"\\vec{AB}"}</Tex> koordinatalarini toping.</>,
           ans: v.map((x, i) => ({ label: <Tex>{"xyz"[i]}</Tex>, v: x })),
           traps: [{ v: v.map((x) => -x), why: "Boshidan oxirini ayirdingiz. To'g'risi: oxiridan boshini, ya'ni $x_B-x_A$." }],
+          anim: vecSubAnim(A, B),
           steps: [<><Tex>{`\\vec{AB}=(${B.map((x, i) => `${tn(x)}-${tp(A[i])}`).join(";\\ ")})=${tvec(v)}`}</Tex></>],
         };
       },
@@ -144,6 +152,7 @@ export const T4: PrepTopic = {
           q: <><Tex>{`\\vec a=${tvec(a)}`}</Tex> vektorning uzunligini toping.</>,
           ans: [{ v: len(a) }],
           traps: [{ v: [sum], why: "Koordinatalarni qo'shdingiz. Uzunlik: $|\\vec a|=\\sqrt{x^2+y^2+z^2}$." }, { v: [dot(a, a)], why: "Ildiz chiqarishni unutdingiz." }],
+          anim: lenAnim(a),
           steps: [<><Tex>{`|\\vec a|=\\sqrt{${a.map((x) => `${tp(x)}^2`).join("+")}}=\\sqrt{${a.map((x) => x * x).join("+")}}=\\sqrt{${dot(a, a)}}=${len(a)}`}</Tex></>],
         };
       },
@@ -157,6 +166,7 @@ export const T4: PrepTopic = {
           q: <><Tex>{`\\vec a=${tvec(a)},\\ \\vec b=${tvec(b)}`}</Tex>. <Tex>{"\\vec a\\cdot\\vec b"}</Tex> = ?</>,
           ans: [{ v: dot(a, b) }],
           traps: [{ v: [a.reduce((s, x, i) => s + x + b[i], 0)], why: "Koordinatalarni qo'shdingiz. Mos koordinatalar avval KO'PAYTIRILADI, keyin qo'shiladi: $x_1x_2+y_1y_2+z_1z_2$." }],
+          anim: dotAnim(a, b),
           steps: [<><Tex>{`${a.map((x, i) => `${tp(x)}\\cdot${tp(b[i])}`).join("+")} = ${a.map((x, i) => tp(x * b[i])).join("+")} = ${dot(a, b)}`}</Tex></>],
         };
       },
@@ -171,6 +181,7 @@ export const T4: PrepTopic = {
         return {
           q: <><Tex>{`\\vec a=${tvec(a)},\\ \\vec b=${tvec(b)}`}</Tex>. <Tex>{`${tn(l)}\\vec a ${m < 0 ? "-" : "+"} ${tn(Math.abs(m))}\\vec b`}</Tex> ni toping.</>,
           ans: r.map((x, i) => ({ label: <Tex>{"xyz"[i]}</Tex>, v: x })),
+          anim: linCombAnim(a, b, l, m),
           steps: [
             <><Tex>{`${tn(l)}\\vec a=${tvec(a.map((x) => l * x))},\\quad ${tn(m)}\\vec b=${tvec(b.map((x) => m * x))}`}</Tex></>,
             <>Qo'shamiz: <Tex>{tvec(r)}</Tex></>,
@@ -193,6 +204,7 @@ export const T4: PrepTopic = {
             q: <><Tex>{`\\vec a=(m;\\ ${tn(p)};\\ ${tn(q)}),\\ \\vec b=${tvec(b)}`}</Tex>. m ning qanday qiymatida vektorlar perpendikulyar?</>,
             ans: [{ label: <Tex>m</Tex>, v: m }],
             traps: [{ v: [-m], why: "Ishorada xato: qolgan hadlarni tenglikning o'ng tomoniga o'tkazganda ishora o'zgaradi." }],
+            anim: perpAnim(p, q, b),
             steps: [
               <>Vektorlar perpendikulyar bo'lishi uchun <Tex>{"\\vec a\\cdot\\vec b=0"}</Tex> bo'lishi kerak: <Tex>{`m\\cdot${tp(b[0])} + ${tp(p)}\\cdot${tp(b[1])} + ${tp(q)}\\cdot${tp(b[2])} = 0`}</Tex></>,
               <><Tex>{`${tn(b[0])}m ${p * b[1] + q * b[2] < 0 ? "-" : "+"} ${Math.abs(p * b[1] + q * b[2])} = 0 \\Rightarrow m = ${tn(m)}`}</Tex></>,
@@ -212,6 +224,7 @@ export const T4: PrepTopic = {
         return {
           q: <><Tex>{`\\vec a=(${a.map((x, i) => (i === h ? "m" : tn(x))).join(";\\ ")}),\\ \\vec b=${tvec(b)}`}</Tex>. m ning qanday qiymatida vektorlar kollinear?</>,
           ans: [{ label: <Tex>m</Tex>, v: a[h] }],
+          anim: colAnim(a, b, h),
           steps: [
             <>Kollinear vektorlarning koordinatalari proporsional. Ma'lum koordinatalardan nisbatni topamiz: <Tex>{`\\lambda = \\frac{${tn(a[(h + 1) % 3])}}{${tn(b[(h + 1) % 3])}} = ${tn(k)}`}</Tex></>,
             <><Tex>{`m = \\lambda\\cdot${tp(b[h])} = ${tn(k)}\\cdot${tp(b[h])} = ${tn(a[h])}`}</Tex></>,
@@ -232,6 +245,7 @@ export const T4: PrepTopic = {
           q: <><Tex>{`${pt("A", A)},\\ ${pt("B", B)}`}</Tex>. AB kesmani <Tex>{`\\lambda=${l}`}</Tex> nisbatda (AC : CB = {l}) bo'luvchi C nuqtani toping.</>,
           ans: [{ label: <Tex>{"x_C"}</Tex>, v: C[0] }, { label: <Tex>{"y_C"}</Tex>, v: C[1] }],
           traps: [{ v: B.map((x, i) => x + (A[i] - x) * l / (1 + l)), why: "A va B ning o'rnini almashtirdingiz: formulada $\\lambda$ B nuqtaning koordinatasiga ko'paytiriladi." }],
+          anim: sectionAnim(A, B, l),
           steps: [
             <><Tex>{`x_C=\\frac{${tn(A[0])}+${l}\\cdot${tp(B[0])}}{1+${l}}=\\frac{${A[0] + l * B[0]}}{${1 + l}}=${tn(C[0])}`}</Tex></>,
             <><Tex>{`y_C=\\frac{${tn(A[1])}+${l}\\cdot${tp(B[1])}}{1+${l}}=\\frac{${A[1] + l * B[1]}}{${1 + l}}=${tn(C[1])}`}</Tex></>,

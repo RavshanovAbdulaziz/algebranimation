@@ -3,6 +3,7 @@ import { LaTeX, Line, Point, Polygon } from "mafs";
 import { Tex } from "../components/Tex";
 import { Arrow, Board, C as COL, Slider } from "../components/viz";
 import { pick, ri, rnz, shuffle, tn, tp, type PrepTopic } from "./core";
+import { canonAnim, distAnim, interceptsAnim, normalAnim, relAnim, slopeAnim, twoPointAnim } from "./anim";
 
 /** Ax + By + C = 0 ni chiroyli yozish */
 export const gen = (A: number, B: number, C: number) => {
@@ -92,6 +93,7 @@ export const T6: PrepTopic = {
   recipes: [
     {
       title: "Umumiy tenglamadan burchak koeffitsiyentli tenglamaga",
+      anim: slopeAnim(3, 5, 2),
       gens: ["slope", "normal"],
       rule: <>Tenglamadan y ni yolg'izlaymiz (y li hadni bir tomonda qoldirib, qolganini narigi tomonga o'tkazamiz va B ga bo'lamiz).</>,
       formula: "Ax+By+C=0\\quad\\Rightarrow\\quad y=-\\frac{A}{B}x-\\frac{C}{B},\\qquad k=-\\frac{A}{B},\\quad b=-\\frac{C}{B}",
@@ -103,6 +105,7 @@ export const T6: PrepTopic = {
     },
     {
       title: "Kesmalardagi tenglama va o'qlar bilan kesishish nuqtalari",
+      anim: interceptsAnim(2, -3, -6),
       gens: ["intercepts"],
       rule: <>Ozod hadni o'ng tomonga o'tkazib, ikki tomonni shu songa bo'lamiz. O'qlar bilan kesishish nuqtalarini topish uchun: Ox bilan — <Tex>{"y=0"}</Tex> qo'yamiz; Oy bilan — <Tex>{"x=0"}</Tex> qo'yamiz.</>,
       formula: "\\frac{x}{a}+\\frac{y}{b}=1,\\qquad a=-\\frac{C}{A},\\quad b=-\\frac{C}{B}",
@@ -114,6 +117,7 @@ export const T6: PrepTopic = {
     },
     {
       title: "Ikki nuqtadan o'tuvchi chiziq",
+      anim: twoPointAnim([1, 2], [3, 8]),
       gens: ["two"],
       rule: <>Ikki nuqtadan bitta chiziq o'tadi. Avval qiyalik k topiladi (y lar farqi x lar farqiga bo'linadi), keyin b.</>,
       formula: "\\frac{x-x_1}{x_2-x_1}=\\frac{y-y_1}{y_2-y_1},\\qquad k=\\frac{y_2-y_1}{x_2-x_1}",
@@ -125,6 +129,7 @@ export const T6: PrepTopic = {
     },
     {
       title: "Kanonik, parametrik va normal tenglamalar",
+      anim: canonAnim(-2, 1, 4, 3),
       gens: ["canon"],
       rule: <><b>Kanonik</b> tenglamada suratda nuqta <Tex>{"M_0(x_0;\\ y_0)"}</Tex>, maxrajda yo'naltiruvchi vektor <Tex>{"\\vec s=(m;\\ n)"}</Tex> turadi. <b>Parametrik</b> tenglama — shuning o'zi, faqat t parametr orqali. <b>Normal</b> tenglamani olish uchun umumiy tenglamani <Tex>{"\\sqrt{A^2+B^2}"}</Tex> ga bo'lamiz; ishorani C ning ishorasiga teskari qilib tanlaymiz.</>,
       formula: "\\frac{x-x_0}{m}=\\frac{y-y_0}{n},\\qquad \\begin{cases}x=x_0+m\\,t\\\\y=y_0+n\\,t\\end{cases},\\qquad x\\cos\\alpha+y\\sin\\alpha-p=0",
@@ -136,6 +141,7 @@ export const T6: PrepTopic = {
     },
     {
       title: "Parallel, perpendikulyar, masofa",
+      anim: distAnim(3, 4, -5, 2, 1),
       gens: ["rel", "dist"],
       rule: <>Ikki chiziq <b>parallel</b> bo'lishi uchun qiyaliklari teng bo'lishi kerak. <b>Perpendikulyar</b> bo'lishi uchun qiyaliklari ko'paytmasi <Tex>{"-1"}</Tex> ga teng bo'lishi kerak. Nuqtadan chiziqqacha masofa: nuqta koordinatalarini tenglamaning chap tomoniga qo'yib, modulini olamiz va <Tex>{"\\sqrt{A^2+B^2}"}</Tex> ga bo'lamiz.</>,
       formula: "\\text{parallel: } k_1=k_2,\\qquad \\text{perpendikulyar: } k_1\\cdot k_2=-1,\\qquad d=\\frac{|Ax_0+By_0+C|}{\\sqrt{A^2+B^2}}",
@@ -162,6 +168,7 @@ export const T6: PrepTopic = {
           q: <><Tex>{gen(A, B, C)}</Tex> to'g'ri chiziqning normal vektorini toping.</>,
           ans: [{ label: <Tex>{"n_x"}</Tex>, v: A }, { label: <Tex>{"n_y"}</Tex>, v: B }],
           traps: [{ v: [A, C], why: "C — ozod had, u normal vektorga kirmaydi: $\\vec n=(A;\\ B)$." }, { v: [B, A], why: "Tartib: avval x oldidagi son (A), keyin y oldidagi son (B)." }, { v: [-B, A], why: "Bu yo'naltiruvchi vektor (chiziqqa parallel). Normal vektor esa $(A;\\ B)$." }],
+          anim: normalAnim(A, B, C),
           steps: [<>Umumiy tenglamada <Tex>{"Ax+By+C=0"}</Tex>: <Tex>{`A=${tn(A)},\\ B=${tn(B)}`}</Tex>, demak <Tex>{`\\vec n=(${tn(A)};\\ ${tn(B)})`}</Tex></>],
         };
       },
@@ -176,6 +183,7 @@ export const T6: PrepTopic = {
           q: <><Tex>{gen(A, B, C)}</Tex> tenglamani <Tex>{"y=kx+b"}</Tex> ko'rinishga keltiring.</>,
           ans: [{ label: <Tex>k</Tex>, v: -A / B }, { label: <Tex>b</Tex>, v: -C / B }],
           traps: [{ v: [A / B, C / B], why: "y ni yolg'izlaganda ishora o'zgaradi: $k=-\\dfrac{A}{B},\\ b=-\\dfrac{C}{B}$." }],
+          anim: slopeAnim(A, B, C),
           steps: [
             <><Tex>{`${tn(B)}y = ${tn(-A)}x ${-C < 0 ? "-" : "+"} ${Math.abs(C)}`}</Tex></>,
             <><Tex>{`y = ${tn(-A / B)}x ${-C / B < 0 ? "-" : "+"} ${tn(Math.abs(C / B))}`}</Tex>, demak <Tex>{`k=${tn(-A / B)},\\ b=${tn(-C / B)}`}</Tex></>,
@@ -194,6 +202,7 @@ export const T6: PrepTopic = {
           q: <><Tex>{gen(A, B, C)}</Tex> chiziq Ox va Oy o'qlarini qayerda kesadi? (kesmalar a va b)</>,
           ans: [{ label: <Tex>a</Tex>, v: a }, { label: <Tex>b</Tex>, v: b }],
           traps: [{ v: [b, a], why: "a — Ox o'qidagi kesma ($y=0$ qo'yiladi), b — Oy o'qidagi kesma ($x=0$ qo'yiladi)." }, { v: [-a, -b], why: "Ishorada xato: $a=-\\dfrac{C}{A},\\ b=-\\dfrac{C}{B}$." }],
+          anim: interceptsAnim(A, B, C),
           steps: [
             <>Ox o'qi bilan kesishish: <Tex>{"y=0"}</Tex> qo'yamiz: <Tex>{`${tn(A)}x ${C < 0 ? "-" : "+"} ${Math.abs(C)} = 0 \\Rightarrow x = ${tn(a)}`}</Tex></>,
             <>Oy o'qi bilan kesishish: <Tex>{"x=0"}</Tex> qo'yamiz: <Tex>{`${tn(B)}y ${C < 0 ? "-" : "+"} ${Math.abs(C)} = 0 \\Rightarrow y = ${tn(b)}`}</Tex></>,
@@ -213,6 +222,7 @@ export const T6: PrepTopic = {
           q: <><Tex>{`M_1(${tn(P1[0])};\\ ${tn(P1[1])}),\\ M_2(${tn(P2[0])};\\ ${tn(P2[1])})`}</Tex> nuqtalardan o'tuvchi chiziqni <Tex>{"y=kx+b"}</Tex> ko'rinishda yozing.</>,
           ans: [{ label: <Tex>k</Tex>, v: k }, { label: <Tex>b</Tex>, v: b }],
           traps: [{ v: [(x2 - x1) / (P2[1] - P1[1]), P1[1] - ((x2 - x1) / (P2[1] - P1[1])) * x1], why: "Qiyalik $k=\\dfrac{y_2-y_1}{x_2-x_1}$: y lar farqi suratda, x lar farqi maxrajda." }],
+          anim: twoPointAnim(P1, P2),
           steps: [
             <><Tex>{`k=\\frac{${tn(P2[1])}-${tp(P1[1])}}{${tn(P2[0])}-${tp(P1[0])}}=\\frac{${P2[1] - P1[1]}}{${x2 - x1}}=${tn(k)}`}</Tex></>,
             <><Tex>{`b = y_1 - kx_1 = ${tn(P1[1])} - ${tp(k)}\\cdot${tp(x1)} = ${tn(b)}`}</Tex></>,
@@ -236,6 +246,7 @@ export const T6: PrepTopic = {
           q: <><Tex>{`M(${tn(x0)};\\ ${tn(y0)})`}</Tex> nuqtadan <Tex>{gen(A, B, C)}</Tex> chiziqqacha masofani toping.</>,
           ans: [{ v: Math.abs(s) / n }],
           traps: [{ v: [Math.abs(s)], why: "$\\sqrt{A^2+B^2}$ ga bo'lishni unutdingiz." }],
+          anim: distAnim(A, B, C, x0, y0),
           steps: [
             <><Tex>{`d=\\frac{|${tp(A)}\\cdot${tp(x0)} + ${tp(B)}\\cdot${tp(y0)} ${C < 0 ? "-" : "+"} ${Math.abs(C)}|}{\\sqrt{${A}^2+${B}^2}}=\\frac{|${s}|}{${n}}=${tn(Math.abs(s) / n)}`}</Tex></>,
           ],
@@ -256,6 +267,7 @@ export const T6: PrepTopic = {
         return {
           q: <><Tex>{ln(k1, b1)}</Tex> va <Tex>{ln(k2, b2)}</Tex> chiziqlar…</>,
           choice: { options: opts, correct: opts.indexOf(right) },
+          anim: relAnim(k1, b1, k2, b2),
           steps: [
             <><Tex>{`k_1=${tn(k1)},\\ k_2=${tn(k2)}`}</Tex></>,
             t === "par" ? <><Tex>{"k_1=k_2"}</Tex>, b lar har xil — chiziqlar parallel.</> : t === "perp" ? <><Tex>{`k_1k_2=${tn(k1)}\\cdot${tp(k2)}=-1`}</Tex>, demak chiziqlar perpendikulyar.</> : <><Tex>{`k_1\\ne k_2`}</Tex> va <Tex>{`k_1k_2=${tn(k1 * k2)}\\ne-1`}</Tex>, demak chiziqlar kesishadi, lekin perpendikulyar emas.</>,
@@ -273,6 +285,7 @@ export const T6: PrepTopic = {
           q: <><Tex>{`\\frac{${fr("x", x0)}}{${tn(m)}} = \\frac{${fr("y", y0)}}{${tn(n)}}`}</Tex> chiziq o'tadigan nuqta <Tex>{"M_0(x_0;\\ y_0)"}</Tex> va yo'naltiruvchi vektor <Tex>{"\\vec s=(m;\\ n)"}</Tex> ni toping.</>,
           ans: [{ label: <Tex>{"x_0"}</Tex>, v: x0 }, { label: <Tex>{"y_0"}</Tex>, v: y0 }, { label: <Tex>m</Tex>, v: m }, { label: <Tex>n</Tex>, v: n }],
           traps: [{ v: [-x0, -y0, m, n], why: "Nuqta ishorasi: suratda $x-x_0$ turadi, shuning uchun $x+3$ bo'lsa $x_0=-3$." }],
+          anim: canonAnim(x0, y0, m, n),
           steps: [
             <><b>Kanonik tenglama shakli:</b> <Tex>{"\\frac{x-x_0}{m}=\\frac{y-y_0}{n}"}</Tex> — suratda nuqta, maxrajda yo'naltiruvchi vektor.</>,
             <><b>Suratdan nuqtani o'qiymiz</b> (ishoraga e'tibor: <Tex>{"x-x_0"}</Tex> da minus turadi): <Tex>{`${fr("x", x0)} = x - ${tp(x0)},\\ \\ ${fr("y", y0)} = y - ${tp(y0)}\\ \\Rightarrow\\ M_0(${tn(x0)};\\ ${tn(y0)})`}</Tex></>,
