@@ -355,7 +355,7 @@ export const T2: PrepTopic = {
           ans: [{ v }],
           traps: wrong !== v ? [{ v: [wrong], why: "Boshqa ustunni oldingiz: j-element uchun B ning j-ustuni kerak." }] : [],
           steps: cellExplain(A, Bm, i, j),
-          anim: (() => { const f = prodAnim(A, Bm); const k = 1 + 2 * (i * 2 + j); return [f[0], f[k], f[k + 1]]; })(),
+          anim: prodAnim(A, Bm, [i, j]),
         };
       },
     },
