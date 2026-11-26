@@ -1,5 +1,6 @@
 import { Tex } from "../components/Tex";
 import { det2, det3, pick, ri, rnz, tmat, tn, tp, type PrepTopic } from "./core";
+import { gaussSteps, makeGauss, matrixSteps } from "./explain";
 
 /** a·x + b·y ko'rinishidagi had yozuvi */
 const lhs = (cs: number[], vars: string[]) =>
@@ -41,6 +42,9 @@ function kramer2Steps(A: number[][], b: number[]) {
 
 const EXA = [[2, 1], [1, -2]];
 const EXB = [3, -1];
+// Gauss misoli: x + 2y + z = 8, 2x + 3y + z = 11, x + y + 2z = 9  (javob 1, 2, 3)
+const GA = [[1, 2, 1], [2, 3, 1], [1, 1, 2]];
+const GB = [8, 11, 9];
 
 export const T3: PrepTopic = {
   n: 3,
@@ -108,21 +112,12 @@ export const T3: PrepTopic = {
       title: "Matritsa usuli",
       rule: <>Sistemani qisqacha <Tex>{"A\\cdot X=B"}</Tex> ko'rinishda yozamiz (A — koeffitsiyentlar jadvali, X — noma'lumlar ustuni, B — o'ng tomondagi sonlar). Ikki tomonni chapdan teskari matritsa <Tex>{"A^{-1}"}</Tex> ga ko'paytiramiz.</>,
       formula: "X = A^{-1}\\cdot B",
-      steps: [
-        <><Tex>{`${sys(EXA, EXB, ["x", "y"])} \\Rightarrow A=${tmat(EXA)},\\ B=${tmat([[3], [-1]])}`}</Tex></>,
-        <><Tex>{"\\det A = -5,\\quad A^{-1}=\\frac{1}{-5}\\begin{pmatrix}-2&-1\\\\-1&2\\end{pmatrix}"}</Tex></>,
-        <><Tex>{"X=\\frac{1}{-5}\\begin{pmatrix}-2\\cdot3+(-1)(-1)\\\\-1\\cdot3+2\\cdot(-1)\\end{pmatrix}=\\frac{1}{-5}\\begin{pmatrix}-5\\\\-5\\end{pmatrix}=\\begin{pmatrix}1\\\\1\\end{pmatrix}"}</Tex></>,
-      ],
+      steps: matrixSteps(EXA, EXB),
     },
     {
       title: "Gauss usuli",
       rule: <>Koeffitsiyentlar va o'ng tomonni bitta jadvalga yozamiz (kengaytirilgan matritsa). Satrlar ustida amallar bajarib, diagonal ostini <b>nolga</b> keltiramiz (zinapoya ko'rinishi), so'ng pastdan yuqoriga yechamiz. Ruxsat etilgan amallar: ikki satrni almashtirish; satrni songa ko'paytirish; bir satrga boshqa satrni biror songa ko'paytirib qo'shish. <Tex>{"R_2-R_1"}</Tex> yozuvi: "2-satrdan 1-satrni ayiramiz".</>,
-      steps: [
-        <><Tex>{"\\left(\\begin{array}{ccc|c}1&1&1&6\\\\1&-1&1&2\\\\2&1&-1&1\\end{array}\\right)"}</Tex></>,
-        <><Tex>{"R_2-R_1,\\ R_3-2R_1:\\ \\left(\\begin{array}{ccc|c}1&1&1&6\\\\0&-2&0&-4\\\\0&-1&-3&-11\\end{array}\\right)"}</Tex></>,
-        <>2-satrdan: <Tex>{"-2y=-4\\Rightarrow y=2"}</Tex></>,
-        <>3-satrdan: <Tex>{"-2-3z=-11\\Rightarrow z=3"}</Tex>; 1-satrdan: <Tex>{"x=6-2-3=1"}</Tex></>,
-      ],
+      steps: gaussSteps(GA, GB),
     },
     {
       title: "Yechim bormi? (Kroneker–Kapelli)",
@@ -141,12 +136,14 @@ export const T3: PrepTopic = {
     { wrong: <>Tenglamada biror noma'lum yo'q bo'lsa, uni tashlab ketish</>, right: <>Yo'q noma'lumning o'rniga <b>0</b> yoziladi. Masalan, <Tex>{"x+z=5"}</Tex> tenglama <Tex>{"x+0\\cdot y+z=5"}</Tex> deb olinadi.</> },
     { wrong: <><Tex>{"\\Delta=0"}</Tex> bo'lsa, "yechim yo'q" deyish</>, right: <><Tex>{"\\Delta=0"}</Tex> bo'lsa, yechim yo'q <b>yoki</b> cheksiz ko'p bo'ladi. Qaysi biri ekanini o'ng tomon hal qiladi.</> },
     { wrong: <>"Birgalikda" — yagona yechimli degani</>, right: <>Birgalikda — <b>kamida bitta</b> yechimi bor degani. Yechim yagona bo'lsa, sistema "aniq" deyiladi.</> },
+    { wrong: <>Matritsa usulida <Tex>{"X=B\\cdot A^{-1}"}</Tex> deb ko'paytirish</>, right: <><Tex>{"X=A^{-1}\\cdot B"}</Tex>: teskari matritsa <b>chapda</b> turadi. Matritsalarda ko'paytuvchilar o'rnini almashtirib bo'lmaydi.</> },
+    { wrong: <>Gauss usulida 3-satrdagi ikkinchi sonni yo'qotish uchun 1-satrdan foydalanish</>, right: <><b>2-satrdan</b> foydalaning: uning birinchi soni allaqachon 0, shuning uchun 3-satrda oldin hosil qilingan nol buzilmaydi.</> },
     { wrong: <>Gauss usulida faqat chap tomonni o'zgartirish</>, right: <>Satr amali <b>butun satrga</b>, o'ng tomondagi son bilan birga qo'llanadi.</> },
   ],
   gens: [
     {
       id: "s2",
-      title: "2 noma'lum",
+      title: "2 noma'lum (Kramer)",
       make: () => {
         const { A, b, x } = make2();
         return {
@@ -191,8 +188,32 @@ export const T3: PrepTopic = {
       },
     },
     {
+      id: "mat",
+      title: "Matritsa usuli",
+      make: () => {
+        const { A, b, x } = make2();
+        return {
+          q: <>Matritsa usulida yeching: <Tex>{sys(A, b, ["x", "y"])}</Tex></>,
+          ans: [{ label: <Tex>x</Tex>, v: x[0] }, { label: <Tex>y</Tex>, v: x[1] }],
+          steps: matrixSteps(A, b),
+        };
+      },
+    },
+    {
+      id: "gauss",
+      title: "Gauss usuli",
+      make: () => {
+        const { A, b, x } = makeGauss();
+        return {
+          q: <>Gauss usulida yeching: <Tex>{sys(A, b, ["x", "y", "z"])}</Tex></>,
+          ans: [{ label: <Tex>x</Tex>, v: x[0] }, { label: <Tex>y</Tex>, v: x[1] }, { label: <Tex>z</Tex>, v: x[2] }],
+          steps: gaussSteps(A, b),
+        };
+      },
+    },
+    {
       id: "s3",
-      title: "3 noma'lum",
+      title: "3 noma'lum (Kramer)",
       make: () => {
         const { A, b, x } = make3();
         const D = det3(A);
