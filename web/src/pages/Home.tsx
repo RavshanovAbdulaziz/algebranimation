@@ -9,6 +9,10 @@ export function Home() {
   const next = TOPICS.find((t) => !done.includes(t.id));
   return (
     <div className="home">
+      <Link to="/oraliq" className="prep-banner big">
+        <span className="pb-tag">Oraliq · 1–6-mavzular</span>
+        <b>Oraliqqa tayyorgarlik</b> — har bir mavzu oddiy tilda, qadamma-qadam yechimlar, cheksiz mashq va 20 savollik sinov imtihoni →
+      </Link>
       <section className="hero">
         <h1>Chiziqli algebra — harakatda</h1>
         <p className="lead">

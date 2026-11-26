@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { byId, dependents, GROUPS, HEMIS_LECTURES, TOPICS } from "../data/topics";
 import { toggleDone, useDone } from "../lib/progress";
 import { Quiz, type Q } from "./Quiz";
+import { prepByN } from "../prep";
 
 export function LessonShell({ id, children, quiz }: { id: string; children: ReactNode; quiz?: Q[] }) {
   const t = byId[id];
@@ -36,9 +37,16 @@ export function LessonShell({ id, children, quiz }: { id: string; children: Reac
         </div>
       </header>
 
+      {t.hemis.some((n) => prepByN[n]) && (
+        <Link to={`/oraliq/${prepByN[t.hemis[0]]?.slug ?? ""}`} className="prep-banner">
+          <b>Oraliqqa tayyorlanyapsizmi?</b> Bu yerda — mavzuning geometrik ma'nosi. Imtihon uchun qisqa, oddiy tushuntirish, qadamma-qadam
+          yechimlar va mashqlar — <u>{prepByN[t.hemis[0]]?.n}-mavzu: tez tayyorgarlik sahifasida</u> →
+        </Link>
+      )}
+
       {t.prereqs.length > 0 && (
-        <section className="links links-in">
-          <h3>Bu mavzu nimalarga tayanadi</h3>
+        <details className="links links-in">
+          <summary>Bu mavzu nimalarga tayanadi ({t.prereqs.length})</summary>
           <ul>
             {t.prereqs.map((p) => (
               <li key={p.id}>
@@ -49,7 +57,7 @@ export function LessonShell({ id, children, quiz }: { id: string; children: Reac
               </li>
             ))}
           </ul>
-        </section>
+        </details>
       )}
 
       <div className="lesson-body">{children}</div>

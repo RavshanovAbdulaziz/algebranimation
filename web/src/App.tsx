@@ -7,6 +7,7 @@ import { Home } from "./pages/Home";
 import { MapPage } from "./pages/MapPage";
 import { Glossary } from "./pages/Glossary";
 import { HemisPage } from "./pages/HemisPage";
+import { MockExam, PrepHub, PrepTopicPage } from "./pages/PrepPages";
 
 function ScrollTop() {
   const { pathname } = useLocation();
@@ -42,6 +43,7 @@ export default function App() {
       <nav className="topnav">
         <Link to="/" className="brand"><span className="logo">λ</span> Algebranimation</Link>
         <div className="navlinks">
+          <NavLink to="/oraliq" className="nav-hot">Oraliqqa tayyorgarlik</NavLink>
           <NavLink to="/dars/vektor">Darslar</NavLink>
           <NavLink to="/xarita">Bilim xaritasi</NavLink>
           <NavLink to="/hemis">HEMIS dasturi</NavLink>
@@ -54,6 +56,9 @@ export default function App() {
         <Route path="/xarita" element={<MapPage />} />
         <Route path="/hemis" element={<HemisPage />} />
         <Route path="/lugat" element={<Glossary />} />
+        <Route path="/oraliq" element={<PrepHub />} />
+        <Route path="/oraliq/sinov" element={<MockExam />} />
+        <Route path="/oraliq/:slug" element={<PrepTopicPage />} />
       </Routes>
     </HashRouter>
   );
